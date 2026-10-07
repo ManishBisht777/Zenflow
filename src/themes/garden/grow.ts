@@ -8,7 +8,12 @@ import {
   pointAlong,
   cubicBezier,
 } from "../../engine/kit.ts";
-import type { GrowContext, Letter, Ornament, Point } from "../../engine/types.ts";
+import type {
+  GrowContext,
+  Letter,
+  Ornament,
+  Point,
+} from "../../engine/types.ts";
 
 type Random = () => number;
 // one word's "personality": every letter of the word grows with these
@@ -362,7 +367,11 @@ export function growLetter(letter: Letter, grow: GrowContext) {
 }
 
 // extra blooms when a word is finished (space typed), fanning out in random directions
-export function growWordEnd(letter: Letter, startsAfter: number, grow: GrowContext) {
+export function growWordEnd(
+  letter: Letter,
+  startsAfter: number,
+  grow: GrowContext,
+) {
   const random = seededRandom(
       letter.wordSeed +
         letter.indexInWord * 31 +

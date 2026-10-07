@@ -3,7 +3,14 @@ import { hashToUnit, easeOut, traceSmoothPath } from "./kit.ts";
 import { cssFont, type Font } from "./config.ts";
 import { colorsOf, type EngineState } from "./state.ts";
 import { updateAndDrawVisitors } from "./visitors.ts";
-import type { Painter, Drawing, Letter, Ornament, Palette, Point } from "./types.ts";
+import type {
+  Painter,
+  Drawing,
+  Letter,
+  Ornament,
+  Palette,
+  Point,
+} from "./types.ts";
 
 // What one render pass needs: the letters to draw plus how they should move.
 export interface SceneState {

@@ -1,6 +1,18 @@
 // Flowers: rose, daisy, tulip, poppy, bluebell. Each springs open after its delay and shrinks while withering.
-import { springIn, easeOut, ellipsePoints, strokePartial } from "../../engine/kit.ts";
-import type { Painter, Drawing, Ornament, Palette, Point, Theme } from "../../engine/types.ts";
+import {
+  springIn,
+  easeOut,
+  ellipsePoints,
+  strokePartial,
+} from "../../engine/kit.ts";
+import type {
+  Painter,
+  Drawing,
+  Ornament,
+  Palette,
+  Point,
+  Theme,
+} from "../../engine/types.ts";
 import { flowerColor, gardenColors } from "./palettes.ts";
 
 // rose petals, back to front: [centreX, centreY, radiusX, radiusY, angle, depth, hasEdgeLine]

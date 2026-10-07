@@ -1,5 +1,10 @@
 // Draw functions for every garden ornament kind: stems (with thorns), leaves and flowers.
-import { springIn, layerAtFraction, pointAlong, drawGrowingPath } from "../../engine/kit.ts";
+import {
+  springIn,
+  layerAtFraction,
+  pointAlong,
+  drawGrowingPath,
+} from "../../engine/kit.ts";
 import type { Painter, Palette, Point, Theme } from "../../engine/types.ts";
 import { gardenColors } from "./palettes.ts";
 import { drawFlower, drawRose } from "./flowers.ts";

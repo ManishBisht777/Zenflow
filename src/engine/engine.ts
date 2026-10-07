@@ -4,7 +4,12 @@
 import { INPUT_SENTINEL } from "./config.ts";
 import { syncClock } from "./clock.ts";
 import { addCharacter } from "./letters.ts";
-import { applyInputChange, handleKeyDown, releasePointer, syncToVisualViewport } from "./input.ts";
+import {
+  applyInputChange,
+  handleKeyDown,
+  releasePointer,
+  syncToVisualViewport,
+} from "./input.ts";
 import { resize } from "./layout.ts";
 import { buildPoster, drawPosterFrame } from "./poster.ts";
 import { paintLiveView } from "./render.ts";
