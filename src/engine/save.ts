@@ -1,15 +1,8 @@
-// Saving: PNG/SVG stills (the poster when in export mode, else the live view), video/frames of the poster loop.
-import { traceSmoothPath, type PathSink } from "./kit.ts";
-import {
-  exportVideo as recordVideo,
-  exportFrames as renderFramesZip,
-  download,
-} from "./export.ts";
+// Saving: video of the poster loop.
+import { exportVideo as recordVideo } from "./export.ts";
 import { POSTER_WIDTH, POSTER_HEIGHT } from "./config.ts";
-import { drawPoster, drawPosterFrame } from "./poster.ts";
-import { liveSceneState, paintLiveView, renderScene } from "./render.ts";
-import { colorsOf, type EngineState } from "./state.ts";
-import type { Painter } from "./types.ts";
+import { drawPosterFrame } from "./poster.ts";
+import type { EngineState } from "./state.ts";
 
 // ---------- export ----------
 export function exportFileName(state: EngineState) {
@@ -24,72 +17,6 @@ export function exportFileName(state: EngineState) {
     state.preset
   );
 }
-export function savePNG(state: EngineState) {
-  if (state.mode === "poster") {
-    state.posterCanvas?.toBlob(
-      (blob) => blob && download(blob, `${exportFileName(state)}.png`),
-    );
-    return;
-  }
-  paintLiveView(state, performance.now(), false);
-  state.canvas.toBlob(
-    (blob) => blob && download(blob, `${state.theme.id}.png`),
-  );
-}
-// ponytail: letters export as <text> (font must be installed to view); outline glyphs via opentype.js if needed
-export function saveSVG(state: EngineState) {
-  const parts: string[] = [],
-    round = (v: number) => Math.round(v * 100) / 100;
-  const pathData = (): PathSink & { d: string } => ({
-    d: "",
-    moveTo(x, y) {
-      this.d += `M${round(x)} ${round(y)}`;
-    },
-    lineTo(x, y) {
-      this.d += `L${round(x)} ${round(y)}`;
-    },
-    quadraticCurveTo(cx, cy, x, y) {
-      this.d += `Q${round(cx)} ${round(cy)} ${round(x)} ${round(y)}`;
-    },
-    closePath() {
-      this.d += "Z";
-    },
-  });
-  const escapeXml = (s: string) =>
-    s
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  const svgPainter: Painter = {
-    fill: (points, color) => {
-      const p = pathData();
-      traceSmoothPath(p, points, true);
-      parts.push(`<path d="${p.d}" fill="${color}"/>`);
-    },
-    stroke: (points, color, width) => {
-      const p = pathData();
-      traceSmoothPath(p, points, false);
-      parts.push(
-        `<path d="${p.d}" fill="none" stroke="${color}" stroke-width="${round(width)}" stroke-linecap="round" stroke-linejoin="round"/>`,
-      );
-    },
-    fillRect: () => {},
-    drawGlyph: (char, x, y, fontSize, color) => {
-      parts.push(
-        `<text x="${round(x)}" y="${round(y)}" text-anchor="middle" font-family="${escapeXml(state.font.family)}" font-weight="${state.font.weight}" font-size="${round(fontSize)}" fill="${color}">${escapeXml(char)}</text>`,
-      );
-    },
-  };
-  const isPoster = state.mode === "poster",
-    width = isPoster ? POSTER_WIDTH : state.width,
-    height = isPoster ? POSTER_HEIGHT : state.height;
-  if (isPoster)
-    drawPoster(state, svgPainter, performance.now() - state.posterStartedAt);
-  else renderScene(state, svgPainter, performance.now(), liveSceneState(state));
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${round(width)}" height="${round(height)}" viewBox="0 0 ${round(width)} ${round(height)}"><rect width="100%" height="100%" fill="${colorsOf(state).background}"/>${parts.join("")}</svg>`;
-  download(new Blob([svg], { type: "image/svg+xml" }), `${isPoster ? exportFileName(state) : state.theme.id}.svg`);
-}
 export function reportStatus(
   state: EngineState,
   status: string,
@@ -103,7 +30,7 @@ export async function exportVideo(state: EngineState) {
   if (!state.videoMimeType) {
     reportStatus(
       state,
-      "Video export isn’t supported in this browser — use PNG frames.",
+      "Video export isn’t supported in this browser.",
     );
     return;
   }
@@ -122,17 +49,4 @@ export async function exportVideo(state: EngineState) {
     `Saved ${result.extension.toUpperCase()} · ${result.frameCount} frames`,
     false,
   );
-}
-export async function exportFrames(state: EngineState) {
-  if (!state.poster || state.isExporting) return;
-  reportStatus(state, "Rendering frames…", true);
-  const frameCount = await renderFramesZip(
-    (context, t) => drawPosterFrame(state, context, t),
-    state.poster.loopMs,
-    POSTER_WIDTH,
-    POSTER_HEIGHT,
-    (percent) => reportStatus(state, `Rendering ${percent}%`),
-    exportFileName(state),
-  );
-  reportStatus(state, `Saved ${frameCount} PNG frames · 30 fps`, false);
 }

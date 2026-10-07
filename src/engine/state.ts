@@ -95,7 +95,6 @@ export interface EngineState {
   renderTime: number;
   poster: PosterScene | null;
   posterStartedAt: number;
-  reachLight: Point;
 }
 
 export function createEngineState(theme: Theme): EngineState {
@@ -104,7 +103,7 @@ export function createEngineState(theme: Theme): EngineState {
     font: FONTS[0],
     paletteIndex: 0,
     mode: "type",
-    preset: "breathe",
+    preset: "scatter",
     posterText: "Zenflow",
     seed: 7,
     density: 1,
@@ -164,7 +163,6 @@ export function createEngineState(theme: Theme): EngineState {
     renderTime: 0,
     poster: null,
     posterStartedAt: 0,
-    reachLight: [0, 0],
   };
   state.grow = {
     glyphWidth: (char) => glyphWidth(state, char),

@@ -6,21 +6,13 @@ import type {
 import { INPUT_SENTINEL } from "./config.ts";
 import { addCharacter, witherLastLetter } from "./letters.ts";
 import { relayout, resize } from "./layout.ts";
-import { savePNG, saveSVG } from "./save.ts";
 import { callVisitor } from "./visitors.ts";
 import type { EngineState } from "./state.ts";
 
 // ---------- keyboard ----------
 export function handleKeyDown(state: EngineState, e: KeyboardEvent) {
   if (state.mode !== "type") return;
-  if (e.metaKey || e.ctrlKey || e.altKey) {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
-      e.preventDefault();
-      if (e.shiftKey) saveSVG(state);
-      else savePNG(state);
-    }
-    return;
-  }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
   const target = e.target as HTMLElement | null;
   if (target?.closest('[role="dialog"]')) return; // settings modal is open
   if (

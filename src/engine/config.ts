@@ -10,46 +10,16 @@ export interface Preset {
 
 export const PRESETS: Preset[] = [
   {
-    id: "breathe",
-    label: "Breathe",
-    description: "Slow sway · 3s",
-    loopMs: 3000,
-  },
-  {
-    id: "grow",
-    label: "Grow & wither",
-    description: "Bloom, then back · 6s",
+    id: "scatter",
+    label: "Emerge",
+    description: "Rise at random, fade · 6s",
     loopMs: 6000,
   },
   {
     id: "typed",
-    label: "Typed",
+    label: "Keystroke",
     description: "Type, cut, repeat · 5s",
     loopMs: 5000,
-  },
-  {
-    id: "wind",
-    label: "Gust",
-    description: "Wind sweeps through · 4s",
-    loopMs: 4000,
-  },
-  {
-    id: "reach",
-    label: "Reach",
-    description: "Growth follows a light · 6s",
-    loopMs: 6000,
-  },
-  {
-    id: "scatter",
-    label: "Scatter",
-    description: "Random bloom, fade · 6s",
-    loopMs: 6000,
-  },
-  {
-    id: "visit",
-    label: "Visitor",
-    description: "{visitor} drops by · 7s",
-    loopMs: 7000,
   },
 ];
 

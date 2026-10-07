@@ -9,7 +9,14 @@ import {
 } from "./components/ui/sheet.tsx";
 import { ScrollArea } from "./components/ui/scroll-area.tsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { FONTS, PRESETS, POSTER_WIDTH, POSTER_HEIGHT, type Font, type Mode } from "./engine/config.ts";
+import {
+  FONTS,
+  PRESETS,
+  POSTER_WIDTH,
+  POSTER_HEIGHT,
+  type Font,
+  type Mode,
+} from "./engine/config.ts";
 import { useEngine } from "./engine/useEngine.ts";
 import { THEMES } from "./themes/index.ts";
 import type { Theme } from "./engine/types.ts";
@@ -106,6 +113,7 @@ export default function App() {
         />
         {/* receives phone keyboard input; desktop typing is read from keydown */}
         <input
+          id="zenflow-input"
           ref={hiddenInputRef}
           onInput={(e) => engine.applyInputChange(e.currentTarget)}
           aria-label="Type to grow"
@@ -148,7 +156,8 @@ export default function App() {
               className="absolute inset-0 grid cursor-default grid-cols-[minmax(280px,340px)_minmax(0,1fr)] text-xs tracking-[.03em] text-foreground max-[720px]:flex max-[720px]:flex-col max-[720px]:overflow-y-auto max-[720px]:touch-pan-y"
             >
               {/* phone: fade under the settings button as the panel scrolls */}
-              <div className="pointer-events-none sticky top-0 z-[4] -mb-[calc(60px+env(safe-area-inset-top))] hidden h-[calc(60px+env(safe-area-inset-top))] flex-none max-[720px]:-order-2 max-[720px]:block"
+              <div
+                className="pointer-events-none sticky top-0 z-[4] -mb-[calc(60px+env(safe-area-inset-top))] hidden h-[calc(60px+env(safe-area-inset-top))] flex-none max-[720px]:-order-2 max-[720px]:block"
                 style={{
                   background: `linear-gradient(${colors.background} 60%, transparent)`,
                 }}
@@ -210,10 +219,7 @@ export default function App() {
                         )}
                         <span className="relative text-[13px]">{p.label}</span>
                         <span className="relative text-[11px] text-muted-foreground">
-                          {p.description.replace(
-                            "{visitor}",
-                            theme.visitorName,
-                          )}
+                          {p.description}
                         </span>
                       </motion.button>
                     ))}
@@ -221,24 +227,6 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-2.5 border-t border-border pt-5">
-                  <SectionLabel>Still · current frame</SectionLabel>
-                  <div className="flex gap-2">
-                    {(["PNG", "SVG"] as const).map((format) => (
-                      <motion.button
-                        key={format}
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() =>
-                          format === "PNG" ? engine.savePNG() : engine.saveSVG()
-                        }
-                        className="cursor-pointer rounded-full border border-border px-3.5 py-2 text-muted-foreground hover:border-foreground hover:text-foreground"
-                      >
-                        {format}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2.5">
                   <SectionLabel>Loop · 1080 × 1350</SectionLabel>
                   <motion.button
                     whileTap={{ scale: 0.97 }}
@@ -247,14 +235,6 @@ export default function App() {
                     className="cursor-pointer rounded-full bg-foreground px-3.5 py-3 font-medium text-background disabled:opacity-60"
                   >
                     {videoButtonLabel}
-                  </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => engine.exportFrames()}
-                    disabled={isExporting}
-                    className="cursor-pointer rounded-full border border-border px-3.5 py-[11px] hover:border-foreground disabled:opacity-60"
-                  >
-                    PNG frames (.zip)
                   </motion.button>
                   <div className="min-h-4 text-muted-foreground">
                     <AnimatePresence mode="wait">
@@ -407,7 +387,6 @@ export default function App() {
                   ))}
                 </div>
               </div>
-
             </div>
           </ScrollArea>
         </SheetContent>

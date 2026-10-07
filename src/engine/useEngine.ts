@@ -15,7 +15,7 @@ import {
 } from "./input.ts";
 import { currentText } from "./letters.ts";
 import { currentPreset } from "./poster.ts";
-import { savePNG, saveSVG, exportVideo, exportFrames } from "./save.ts";
+import { exportVideo } from "./save.ts";
 import { setTheme, setFont, setMode, updatePoster } from "./settings.ts";
 import { createEngineState, type EngineState } from "./state.ts";
 import type { Theme } from "./types.ts";
@@ -61,10 +61,7 @@ export function useEngine(
         applyInputChange(state, field),
       handlePointerDown: (e: ReactPointerEvent) => handlePointerDown(state, e),
       handleClick: (e: ReactMouseEvent) => handleClick(state, e),
-      savePNG: () => savePNG(state),
-      saveSVG: () => saveSVG(state),
       exportVideo: () => exportVideo(state),
-      exportFrames: () => exportFrames(state),
     }),
     [state],
   );

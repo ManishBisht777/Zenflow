@@ -9,6 +9,5 @@ import water from "./water.ts";
 import city from "./city.ts";
 import desert from "./desert.ts";
 import mountain from "./mountain.ts";
-import floral from "./floral.ts";
 
-export const THEMES = [garden, space, water, city, desert, mountain, floral];
+export const THEMES = [garden, space, water, city, desert, mountain];

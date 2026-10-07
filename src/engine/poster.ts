@@ -1,17 +1,17 @@
-// Poster mode: a seeded, square, looping scene; each preset changes timing or adds a warp.
-import { easeOut, seededRandom } from "./kit.ts";
+// Poster (export) mode: a seeded, 4:5, looping scene; each preset changes letter timing.
+import { seededRandom } from "./kit.ts";
 import { PRESETS, POSTER_WIDTH, POSTER_HEIGHT } from "./config.ts";
 import { createLetter, growLetter } from "./letters.ts";
 import { layoutLetters } from "./layout.ts";
 import { canvasPainter, renderScene, type SceneState } from "./render.ts";
-import { colorsOf, type EngineState, type PosterScene } from "./state.ts";
-import type { Painter, Letter, Palette, Point } from "./types.ts";
+import { colorsOf, type EngineState } from "./state.ts";
+import type { Letter } from "./types.ts";
 
 // ---------- poster ----------
 export function currentPreset(state: EngineState) {
   return PRESETS.find((p) => p.id === state.preset) || PRESETS[0];
 }
-// Builds a separate, seeded set of letters for the square poster and fits the whole scene into it.
+// Builds a separate, seeded set of letters for the poster and fits the whole scene into it.
 export function buildPoster(state: EngineState) {
   if (!state.context) return;
   const preset = currentPreset(state),
@@ -41,14 +41,8 @@ export function buildPoster(state: EngineState) {
   }
   // timing: when each letter is born and dies within the loop
   const count = letters.length;
-  const birthStep =
-    preset.id === "grow"
-      ? Math.min(110, 3000 / count)
-      : preset.id === "typed"
-        ? Math.min(85, 3600 / count)
-        : 0;
-  const firstBirth =
-    preset.id === "grow" ? 200 : preset.id === "typed" ? 300 : 0;
+  const birthStep = preset.id === "typed" ? Math.min(85, 3600 / count) : 0;
+  const firstBirth = preset.id === "typed" ? 300 : 0;
   letters.forEach((l, i) => {
     l.posterBirthOffset = firstBirth + i * birthStep;
   });
@@ -155,99 +149,19 @@ export function buildPoster(state: EngineState) {
   };
   state.posterStartedAt = performance.now();
 }
-// scripted flight for the "visit" preset: in → first perch → second perch → out
-export function drawPosterVisitor(
-  state: EngineState,
-  painter: Painter,
-  loopTime: number,
-  poster: PosterScene,
-  colors: Palette,
-) {
-  const byX = state.perches.slice().sort((a, b) => a.x - b.x);
-  if (!byX.length) return;
-  const first = byX[Math.floor(byX.length * 0.25)],
-    second = byX[Math.min(byX.length - 1, Math.floor(byX.length * 0.75))];
-  const enter: Point = [-80, 300],
-    seat1: Point = [first.x, first.y - first.radius * 0.55],
-    seat2: Point = [second.x, second.y - second.radius * 0.55],
-    exit: Point = [1160, 260];
-  const size = Math.max(12, poster.fontSize * 0.09),
-    seconds = loopTime / 1000,
-    ease = (v: number) => easeOut(Math.max(0, Math.min(1, v)));
-  const flightLeg = (
-    from: Point,
-    to: Point,
-    progress: number,
-    arcHeight: number,
-  ): Point => {
-    const e = ease(progress);
-    return [
-      from[0] + (to[0] - from[0]) * e,
-      from[1] + (to[1] - from[1]) * e - Math.sin(e * Math.PI) * arcHeight,
-    ];
-  };
-  let position: Point,
-    isFlying = true,
-    direction = 0;
-  if (seconds < 1.8) {
-    position = flightLeg(enter, seat1, seconds / 1.8, 160);
-    direction = 1;
-  } else if (seconds < 3.4) {
-    position = seat1;
-    isFlying = false;
-  } else if (seconds < 4.6) {
-    position = flightLeg(seat1, seat2, (seconds - 3.4) / 1.2, 140);
-    direction = seat2[0] > seat1[0] ? 1 : -1;
-  } else if (seconds < 5.8) {
-    position = seat2;
-    isFlying = false;
-  } else {
-    position = flightLeg(seat2, exit, (seconds - 5.8) / 1.2, 60);
-    direction = 1;
-  }
-  let wingOpen, angle;
-  if (isFlying) {
-    wingOpen = Math.abs(Math.cos(seconds * 17));
-    position = [
-      position[0] + Math.sin(seconds * 7) * 6,
-      position[1] + Math.sin(seconds * 13) * 4,
-    ];
-    angle = direction * 0.3;
-  } else {
-    const flapBurst =
-      (seconds > 2.4 && seconds < 2.8) || (seconds > 5 && seconds < 5.3);
-    wingOpen = flapBurst
-      ? 0.2 + 0.8 * Math.abs(Math.cos(seconds * 9))
-      : 0.3 + 0.1 * Math.sin(seconds * 3);
-    angle = 0;
-  }
-  state.theme.drawVisitor(
-    painter,
-    position[0],
-    position[1],
-    size,
-    angle,
-    wingOpen,
-    colors,
-  );
-}
 // Draws the poster at `timeMs` (wraps around the loop). Each preset only changes timing or adds a warp.
 export function drawPosterFrame(
   state: EngineState,
   context: CanvasRenderingContext2D,
   timeMs: number,
 ) {
-  if (!state.poster) return;
-  context.setTransform(1, 0, 0, 1, 0, 0);
-  context.fillStyle = colorsOf(state).background;
-  context.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
-  drawPoster(state, canvasPainter(context, state.font), timeMs);
-}
-// the poster scene through any painter (canvas for frames, SVG for stills); background is the caller's
-export function drawPoster(state: EngineState, painter: Painter, timeMs: number) {
   const poster = state.poster;
   if (!poster) return;
   const colors = colorsOf(state);
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.fillStyle = colors.background;
+  context.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+  const painter = canvasPainter(context, state.font);
   const loopTime = ((timeMs % poster.loopMs) + poster.loopMs) % poster.loopMs,
     letters = poster.letters,
     fontSize = poster.fontSize;
@@ -273,79 +187,11 @@ export function drawPoster(state: EngineState, painter: Painter, timeMs: number)
       l.wordEndedAt =
         l.posterWordEndOffset != null ? l.bornAt + l.posterWordEndOffset : null;
     });
-  const fullyGrown = -1e5; // born long ago
-  // wind gust profile at distance d from the front: a decaying ripple behind it, a bump at it
-  const gustAt = (d: number) =>
-    d < 0 ? Math.exp(d * 2.2) * Math.cos(-d * 9) : Math.exp(-d * d * 30);
-  if (poster.preset === "breathe") {
-    setBirths(fullyGrown);
-    const phase = (loopTime / poster.loopMs) * Math.PI * 2;
-    scene.warp = (x, y, l) => {
-      const h = Math.max(0, (l.y - y) / fontSize);
-      return [
-        x + Math.sin(phase + l.x * 0.004 + h * 1.1) * fontSize * 0.03 * h,
-        y + Math.cos(phase + x * 0.003) * fontSize * 0.008 * h,
-      ];
-    };
-    scene.extraRotation = (o) => Math.sin(phase + o.id * 0.7) * 0.12;
-  } else if (poster.preset === "grow" || poster.preset === "scatter") {
+  if (poster.preset === "scatter") {
     setBirths(0);
     letters.forEach((l) => {
       if (loopTime >= l.posterDeathAt) l.diedAt = l.posterDeathAt;
     });
-  } else if (poster.preset === "wind") {
-    setBirths(fullyGrown);
-    const front = -0.35 + (loopTime / poster.loopMs) * 1.9;
-    scene.warp = (x, y, l) => {
-      const heightAbove = Math.max(0, (l.y - y) / fontSize),
-        gust = gustAt(l.x / POSTER_WIDTH - front);
-      const idle = Math.sin((loopTime / 1000) * 1.6 + l.x * 0.01) * 0.012;
-      return [
-        x +
-          (gust * 0.13 + idle) * fontSize * heightAbove * heightAbove * 0.6 +
-          (gust * 0.13 + idle) * fontSize * heightAbove * 0.4,
-        y + Math.abs(gust) * 0.02 * fontSize * heightAbove,
-      ];
-    };
-    scene.extraRotation = (o) =>
-      gustAt((o.x || 0) / POSTER_WIDTH - front) * 0.35;
-  } else if (poster.preset === "reach") {
-    setBirths(fullyGrown);
-    const phase = (loopTime / poster.loopMs) * Math.PI * 2,
-      lightX = POSTER_WIDTH / 2 + Math.sin(phase) * 430,
-      lightY = POSTER_HEIGHT / 2 + Math.sin(phase * 2) * 260;
-    state.reachLight = [lightX, lightY];
-    scene.warp = (x, y, l) => {
-      const dx = lightX - l.x,
-        dy = lightY - (l.y - fontSize * 0.6),
-        distance = Math.hypot(dx, dy) || 1,
-        w = Math.max(0, 1 - distance / 560),
-        strength = w * w * (3 - 2 * w);
-      const heightAbove = Math.min(2.5, Math.max(0, (l.y - y) / fontSize)),
-        bend = heightAbove * heightAbove * 0.5 + heightAbove * 0.5;
-      return [
-        x + (dx / distance) * strength * fontSize * 0.12 * bend,
-        y + (dy / distance) * strength * fontSize * 0.06 * bend,
-      ];
-    };
-    scene.extraRotation = (o) =>
-      Math.sin(Math.atan2(lightY - (o.y || 0), lightX - (o.x || 0))) * 0.15;
-  } else if (poster.preset === "visit") {
-    setBirths(fullyGrown);
-    scene.collectPerches = true;
-    state.perches = [];
-    const phase = (loopTime / poster.loopMs) * Math.PI * 2;
-    scene.warp = (x, y, l) => {
-      const heightAbove = Math.max(0, (l.y - y) / fontSize);
-      return [
-        x +
-          Math.sin(phase + l.x * 0.004 + heightAbove) *
-            fontSize *
-            0.015 *
-            heightAbove,
-        y,
-      ];
-    };
   } else {
     // typed
     if (loopTime >= 4400) return;
@@ -354,21 +200,6 @@ export function drawPoster(state: EngineState, painter: Painter, timeMs: number)
     scene.drawDeadLetters = false;
   }
   renderScene(state, painter, loopTime, scene);
-  if (poster.preset === "reach") {
-    const [lightX, lightY] = state.reachLight,
-      radius = fontSize * 0.09,
-      points: Point[] = [];
-    for (let k = 0; k < 20; k++) {
-      const a = (k / 20) * Math.PI * 2;
-      points.push([
-        lightX + Math.cos(a) * radius,
-        lightY + Math.sin(a) * radius,
-      ]);
-    }
-    painter.fill(points, colors.accent);
-  }
-  if (poster.preset === "visit")
-    drawPosterVisitor(state, painter, loopTime, poster, colors);
   if (poster.preset === "typed") {
     const shown = scene.letters,
       last = shown[shown.length - 1];
