@@ -388,6 +388,7 @@ const city: Theme = {
   id: "city",
   name: "City",
   visitorName: "Pigeon",
+  grounded: true,
   typingHint: "type to build",
   palettes: [
     palette(

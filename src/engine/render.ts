@@ -3,6 +3,7 @@ import { hashToUnit, easeOut, traceSmoothPath } from "./kit.ts";
 import { cssFont, type Font } from "./config.ts";
 import { colorsOf, type EngineState } from "./state.ts";
 import { updateAndDrawVisitors } from "./visitors.ts";
+import { clockDecor, clockDecorSize } from "./clock.ts";
 import type {
   Painter,
   Drawing,
@@ -82,6 +83,7 @@ export function paintLiveView(
   context.fillRect(0, 0, state.width, state.height);
   const painter = canvasPainter(context, state.font),
     scene = liveSceneState(state);
+  if (state.mode === "clock") drawStillScenery(state, painter);
   renderScene(state, painter, now, scene);
   updateAndDrawVisitors(state, painter, now, scene.colors);
   if (showCaret) {
@@ -100,6 +102,34 @@ export function paintLiveView(
       );
     }
   }
+}
+// clock mode's surroundings: fully grown, frozen at one age so nothing moves, no glyphs
+const STILL_AGE = 60000;
+function drawStillScenery(state: EngineState, painter: Painter) {
+  const scene: SceneState = {
+    letters: [],
+    fontSize: clockDecorSize(state),
+    colors: colorsOf(state),
+    handDrawnJitter: false,
+    tendrilRecoil: 0,
+    speed: 1,
+    witherMs: 1,
+  };
+  for (const layer of [0, 1])
+    for (const letter of clockDecor(state)) {
+      const pass = {
+        painter,
+        letter,
+        age: STILL_AGE,
+        vitality: 1,
+        scene,
+        jitterStep: 0,
+        jitterAmount: 0,
+        layer,
+      };
+      drawOrnaments(state, pass, letter.ornaments, null);
+      drawOrnaments(state, pass, letter.wordEndOrnaments!, null);
+    }
 }
 // Draws: ornaments behind the type → the type → ornaments in front.
 export function renderScene(

@@ -440,6 +440,7 @@ const desert: Theme = {
   id: "desert",
   name: "Desert",
   visitorName: "Bird",
+  grounded: true,
   typingHint: "type to bloom",
   palettes: [
     //       name      background dunes                   cactus     rib        blooms                  sun        rock       text

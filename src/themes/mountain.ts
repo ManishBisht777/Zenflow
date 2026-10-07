@@ -417,6 +417,7 @@ const mountain: Theme = {
   id: "mountain",
   name: "Mountain",
   visitorName: "Eagle",
+  grounded: true,
   typingHint: "type to climb",
   palettes: [
     //       name      background rock lit / shaded         snow       pine       trunk      cloud      sun        text

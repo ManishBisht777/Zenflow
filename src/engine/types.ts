@@ -110,6 +110,7 @@ export interface Theme {
   palettes: Palette[];
   replacesGlyphs?: boolean; // the ornaments ARE the letters: don't paint the text, regrow when the font changes
   preferredFontId?: string; // font picked automatically when switching to this theme
+  grounded?: boolean; // its scenery stands on the ground (clock mode lines it along the bottom edge)
   typeScale?: number; // >1 allows bigger type when the theme needs less headroom around the letters
   growLetter(
     letter: Letter,

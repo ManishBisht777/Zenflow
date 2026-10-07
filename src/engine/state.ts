@@ -95,6 +95,8 @@ export interface EngineState {
   renderTime: number;
   poster: PosterScene | null;
   posterStartedAt: number;
+  clockDecor: Letter[]; // still scenery around the clock
+  clockDecorKey: string;
 }
 
 export function createEngineState(theme: Theme): EngineState {
@@ -163,6 +165,8 @@ export function createEngineState(theme: Theme): EngineState {
     renderTime: 0,
     poster: null,
     posterStartedAt: 0,
+    clockDecor: [],
+    clockDecorKey: "",
   };
   state.grow = {
     glyphWidth: (char) => glyphWidth(state, char),
