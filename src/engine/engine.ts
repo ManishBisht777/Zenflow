@@ -2,6 +2,7 @@
 // Plain functions over an EngineState object (state.ts); useEngine.ts keeps that state in a ref and wires it to React.
 // What grows and how it looks lives in the theme (see src/themes).
 import { INPUT_SENTINEL } from "./config.ts";
+import { syncClock } from "./clock.ts";
 import { applyInputChange, handleKeyDown, releasePointer, syncToVisualViewport } from "./input.ts";
 import { resize } from "./layout.ts";
 import { buildPoster, drawPosterFrame } from "./poster.ts";
@@ -106,6 +107,7 @@ export function tick(state: EngineState) {
       );
     return;
   }
+  if (state.mode === "clock") syncClock(state, now);
   const ease = 1 - Math.exp(-dt / 80);
   state.fontSize += (state.targetFontSize - state.fontSize) * ease;
   state.caretX += (state.targetCaretX - state.caretX) * ease;
@@ -118,5 +120,5 @@ export function tick(state: EngineState) {
   state.letters = state.letters.filter(
     (l) => !(l.diedAt && now - l.diedAt > 300),
   );
-  paintLiveView(state, now, true);
+  paintLiveView(state, now, state.mode === "type");
 }

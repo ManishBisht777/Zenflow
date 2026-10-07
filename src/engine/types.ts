@@ -47,6 +47,7 @@ export interface Letter {
   x: number; y: number;                // where the letter is drawn now (eases towards target)
   targetX: number; targetY: number;    // where layout wants it
   width: number;
+  scale?: number;                      // size relative to the line (clock's am/pm), default 1
   pointerLean: Point;                  // smoothed pull towards the pointer
   // poster timing
   posterBirthOffset: number;

@@ -22,6 +22,7 @@ export function handleKeyDown(state: EngineState, e: KeyboardEvent) {
     return;
   }
   const target = e.target as HTMLElement | null;
+  if (target?.closest('[role="dialog"]')) return; // settings modal is open
   if (
     target &&
     target.tagName === "BUTTON" &&
@@ -97,9 +98,13 @@ export function refocusTyping(state: EngineState) {
 }
 // ---------- pointer (wired from React) ----------
 export function handlePointerDown(state: EngineState, e: ReactPointerEvent) {
-  if (state.mode !== "type") return;
+  if (state.mode === "poster") return;
   const isTouch = e.pointerType && e.pointerType !== "mouse",
     onCanvas = e.target === state.canvas;
+  if (state.mode === "clock") {
+    if (onCanvas) callVisitor(state, e.clientX, e.clientY); // nothing to type into
+    return;
+  }
   // touch: leave focus (and the keyboard) where it is while tapping; the tap's click opens the keyboard
   if (isTouch) {
     if (

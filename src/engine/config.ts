@@ -1,6 +1,6 @@
 // Static settings: poster presets, fonts and engine constants.
 
-export type Mode = "type" | "poster";
+export type Mode = "type" | "poster" | "clock";
 export interface Preset {
   id: string;
   label: string;

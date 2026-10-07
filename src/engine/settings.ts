@@ -38,11 +38,16 @@ export function onGlyphsChanged(state: EngineState) {
   buildPoster(state);
 }
 export function setMode(state: EngineState, mode: Mode) {
+  // leaving the clock: its letters go, typing starts fresh
+  if (state.mode === "clock" && mode !== "clock") {
+    state.letters = [];
+    relayout(state);
+  }
   state.mode = mode;
-  if (mode === "type")
+  if (mode !== "poster")
     requestAnimationFrame(() => {
       resize(state);
-      state.hiddenInput.focus({ preventScroll: true });
+      if (mode === "type") state.hiddenInput.focus({ preventScroll: true });
     });
 }
 export function updatePoster(

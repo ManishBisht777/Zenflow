@@ -171,7 +171,13 @@ export function renderScene(
   if (!state.theme.replacesGlyphs)
     for (const l of letters)
       if (l.char !== " " && (scene.drawDeadLetters || !l.diedAt))
-        painter.drawGlyph(l.char, l.x, l.y, fontSize, scene.colors.text);
+        painter.drawGlyph(
+          l.char,
+          l.x,
+          l.y,
+          fontSize * (l.scale ?? 1),
+          scene.colors.text,
+        );
   drawLayer(1);
 }
 export function drawOrnaments(
@@ -190,7 +196,7 @@ export function drawOrnaments(
   growthOverride: number | null,
 ) {
   const { painter, letter, scene, layer } = pass,
-    fontSize = scene.fontSize;
+    fontSize = scene.fontSize * (letter.scale ?? 1);
   for (const ornament of ornaments) {
     if (!ornament.segments && ornament.layer !== layer) continue; // path ornaments pick their own segments per layer
     const drawOrnament = state.theme.draw[ornament.kind];

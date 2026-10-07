@@ -26,7 +26,7 @@ export function layoutLetters(
   const maxLineWidth = areaWidth * 0.8,
     largestFontSize = areaHeight * 0.28 * (state.theme.typeScale ?? 1),
     lineHeight = 2.1;
-  const widths = letters.map((l) => glyphWidth(state, l.char));
+  const widths = letters.map((l) => glyphWidth(state, l.char) * (l.scale ?? 1));
   const words: { isSpace?: boolean; indices: number[] }[] = [];
   let word: { indices: number[] } | null = null;
   letters.forEach((letter, i) => {
