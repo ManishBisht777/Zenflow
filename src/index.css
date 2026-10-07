@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+  --font-display: 'Playfair Display', Georgia, serif;
+}
+
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; overscroll-behavior: none; }
+.app { -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; user-select: none; }
+.app button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* phone: pin the app to the visible area above the keyboard (set by the engine) */
+html[data-touch] .app { touch-action: none; top: var(--tg-top, 0px); bottom: auto; height: var(--tg-h, 100%); }
