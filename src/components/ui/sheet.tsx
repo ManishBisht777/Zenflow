@@ -16,7 +16,7 @@ function SheetOverlay({
     <SheetPrimitive.Overlay
       data-slot="sheet-overlay"
       className={cn(
-        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
+        "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/15 backdrop-blur-[3px]",
         className,
       )}
       {...props}
@@ -30,7 +30,7 @@ function SheetContent({
   side = "right",
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: "top" | "right" | "bottom" | "left";
+  side?: "top" | "right" | "bottom" | "left" | "popover";
 }) {
   return (
     <SheetPrimitive.Portal data-slot="sheet-portal">
@@ -47,6 +47,8 @@ function SheetContent({
             "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b border-border",
           side === "bottom" &&
             "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t border-border",
+          side === "popover" &&
+            "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 top-[calc(64px+env(safe-area-inset-top))] left-[calc(16px+env(safe-area-inset-left))] w-[min(280px,calc(100vw-32px))] max-h-[calc(100dvh-80px-env(safe-area-inset-top))] rounded-lg border border-border bg-background/60 backdrop-blur-md",
           className,
         )}
         {...props}

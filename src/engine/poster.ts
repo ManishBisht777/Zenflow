@@ -12,7 +12,11 @@ export function currentPreset(state: EngineState) {
   return PRESETS.find((p) => p.id === state.preset) || PRESETS[0];
 }
 // Builds a separate, seeded set of letters for the poster and fits the whole scene into it.
-export function buildPoster(state: EngineState) {
+export function buildPoster(
+  state: EngineState,
+  width = POSTER_WIDTH,
+  height = POSTER_HEIGHT,
+) {
   if (!state.context) return;
   const preset = currentPreset(state),
     text = (state.posterText || "").slice(0, 40) || " ";
@@ -78,7 +82,7 @@ export function buildPoster(state: EngineState) {
     }
   });
   state.random = Math.random;
-  const layout = layoutLetters(state, letters, POSTER_WIDTH, POSTER_HEIGHT, false);
+  const layout = layoutLetters(state, letters, width, height, false);
   // bounding box of the whole scene (type + every ornament)
   const fontSize = layout.fontSize;
   let left = 1e9,
@@ -125,8 +129,8 @@ export function buildPoster(state: EngineState) {
       typeTop = Math.min(typeTop, l.targetY - 0.72 * fontSize);
       typeBottom = Math.max(typeBottom, l.targetY);
     }
-  const halfX = POSTER_WIDTH * 0.44,
-    halfY = POSTER_HEIGHT * 0.44,
+  const halfX = width * 0.44,
+    halfY = height * 0.44,
     typeCentreX = (typeLeft + typeRight) / 2,
     typeCentreY = (typeTop + typeBottom) / 2;
   const scale = Math.min(
@@ -135,8 +139,8 @@ export function buildPoster(state: EngineState) {
     halfY / Math.max(1, typeCentreY - top, bottom - typeCentreY),
   );
   letters.forEach((l) => {
-    l.targetX = POSTER_WIDTH / 2 + (l.targetX - typeCentreX) * scale;
-    l.targetY = POSTER_HEIGHT / 2 + (l.targetY - typeCentreY) * scale;
+    l.targetX = width / 2 + (l.targetX - typeCentreX) * scale;
+    l.targetY = height / 2 + (l.targetY - typeCentreY) * scale;
     l.width *= scale;
     l.x = l.targetX;
     l.y = l.targetY;
@@ -154,13 +158,15 @@ export function drawPosterFrame(
   state: EngineState,
   context: CanvasRenderingContext2D,
   timeMs: number,
+  width = POSTER_WIDTH,
+  height = POSTER_HEIGHT,
 ) {
   const poster = state.poster;
   if (!poster) return;
   const colors = colorsOf(state);
   context.setTransform(1, 0, 0, 1, 0, 0);
   context.fillStyle = colors.background;
-  context.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+  context.fillRect(0, 0, width, height);
   const painter = canvasPainter(context, state.font);
   const loopTime = ((timeMs % poster.loopMs) + poster.loopMs) % poster.loopMs,
     letters = poster.letters,
@@ -207,8 +213,8 @@ export function drawPosterFrame(
       Math.floor(loopTime / 400) % 2 === 0 ||
       (last && loopTime - last.bornAt < 300)
     ) {
-      const x = last ? last.targetX + last.width / 2 + 0.07 * fontSize : POSTER_WIDTH / 2,
-        y = last ? last.targetY - 0.33 * fontSize : POSTER_HEIGHT / 2,
+        const x = last ? last.targetX + last.width / 2 + 0.07 * fontSize : width / 2,
+        y = last ? last.targetY - 0.33 * fontSize : height / 2,
         w = Math.max(2, fontSize * 0.03),
         h = 0.8 * fontSize;
       painter.fillRect(x - w / 2, y - h / 2, w, h, colors.text);

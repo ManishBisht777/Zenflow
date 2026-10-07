@@ -8,6 +8,13 @@ import {
   SheetTitle,
 } from "./components/ui/sheet.tsx";
 import { ScrollArea } from "./components/ui/scroll-area.tsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./components/ui/select.tsx";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   FONTS,
@@ -43,6 +50,17 @@ export default function App() {
   const [presetId, setPresetId] = useState(engine.state.preset);
   const [posterText, setPosterText] = useState(engine.state.posterText);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [imageSize, setImageSize] = useState("linkedin");
+  const [customWidth, setCustomWidth] = useState("1200");
+  const [customHeight, setCustomHeight] = useState("630");
+
+  const imageSizes = {
+    linkedin: { label: "LinkedIn banner", width: 1584, height: 396 },
+    twitter: { label: "Twitter / X banner", width: 1500, height: 500 },
+  } as const;
+  const selectedImageSize = imageSize === "custom"
+    ? { width: Number(customWidth), height: Number(customHeight) }
+    : imageSizes[imageSize as keyof typeof imageSizes];
 
   const colors = theme.palettes[paletteIndex] || theme.palettes[0];
   const selectTheme = (id: string) => {
@@ -140,27 +158,26 @@ export default function App() {
           className="absolute top-[calc(26px+env(safe-area-inset-top))] right-[calc(20px+env(safe-area-inset-right))] z-20 text-xs tracking-[.04em] transition-colors duration-500"
           style={{ color: colors.text }}
         >
-          by{" "}
           <a
             href="https://manishbisht.com/?ref=zenflow"
             target="_blank"
             rel="noopener"
             className="underline underline-offset-2"
           >
-            manish bisht
+            More by Manish
           </a>
         </div>
 
         <SegmentedControl
           highlightId="modeHighlight"
           options={[
-            ["type", "Type"],
-            ["poster", "Export"],
-            ["clock", "Clock"],
+            ["type", "Flow"],
+            ["poster", "Bloom"],
+            ["clock", "Still"],
           ]}
           selected={mode}
           onSelect={selectMode}
-          className="absolute top-[calc(16px+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 shadow-sm"
+          className="absolute top-[calc(16px+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 shadow-xs"
         />
 
         <AnimatePresence>
@@ -271,6 +288,72 @@ export default function App() {
                 </div>
 
                 <div className="flex flex-col gap-2.5 border-t border-border pt-5">
+                  <SectionLabel>Still image · PNG</SectionLabel>
+                  <Select
+                    value={imageSize}
+                    onValueChange={setImageSize}
+                  >
+                    <SelectTrigger
+                      aria-label="Image export size"
+                      className="h-10 w-full rounded-[10px] border-border bg-background text-xs text-foreground"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="border-border bg-background text-foreground">
+                      <SelectItem value="linkedin">LinkedIn banner · 1584 × 396</SelectItem>
+                      <SelectItem value="twitter">Twitter / X banner · 1500 × 500</SelectItem>
+                      <SelectItem value="custom">Custom viewport</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {imageSize === "custom" && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Width
+                        <input
+                          type="number"
+                          min="1"
+                          max="4096"
+                          value={customWidth}
+                          onChange={(e) => setCustomWidth(e.currentTarget.value)}
+                          className="rounded-[10px] border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-foreground"
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-muted-foreground">
+                        Height
+                        <input
+                          type="number"
+                          min="1"
+                          max="4096"
+                          value={customHeight}
+                          onChange={(e) => setCustomHeight(e.currentTarget.value)}
+                          className="rounded-[10px] border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-foreground"
+                        />
+                      </label>
+                    </div>
+                  )}
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() =>
+                      engine.exportImage(
+                        selectedImageSize.width,
+                        selectedImageSize.height,
+                      )
+                    }
+                    disabled={
+                      !Number.isFinite(selectedImageSize.width) ||
+                      !Number.isFinite(selectedImageSize.height) ||
+                      selectedImageSize.width < 1 ||
+                      selectedImageSize.height < 1 ||
+                      selectedImageSize.width > 4096 ||
+                      selectedImageSize.height > 4096
+                    }
+                    className="cursor-pointer rounded-md border border-border px-3.5 py-3 font-medium text-foreground hover:border-foreground disabled:opacity-50"
+                  >
+                    Export PNG · {selectedImageSize.width || "—"} × {selectedImageSize.height || "—"}
+                  </motion.button>
+                </div>
+
+                <div className="flex flex-col gap-2.5 border-t border-border pt-5">
                   <SectionLabel>Loop · 1080 × 1350</SectionLabel>
                   <motion.button
                     whileTap={{ scale: 0.97 }}
@@ -313,15 +396,15 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* outside the app div so sheet clicks don't bubble (via React) into the engine's handlers */}
+      {/* outside the app div so settings clicks don't reach the engine handlers */}
       <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
         <SheetContent
           onCloseAutoFocus={(e) => {
             e.preventDefault();
             engine.refocusTyping();
           }}
-          side="left"
-          className="w-[min(380px,calc(100vw-48px))] gap-0 text-xs tracking-[.03em] sm:max-w-none"
+          side="popover"
+          className="gap-0 text-xs tracking-[.03em] shadow-xl"
         >
           <SheetHeader className="p-5 pb-4">
             <SheetTitle className="font-display text-[22px]">
@@ -336,15 +419,15 @@ export default function App() {
             <div className="flex flex-col gap-[26px] px-5 pb-[calc(20px+env(safe-area-inset-bottom))]">
               {THEMES.length > 1 && (
                 <div className="flex flex-col gap-2.5">
-                  <SectionLabel>Theme</SectionLabel>
-                  <div className="grid grid-cols-3 gap-2">
+                  <SectionLabel>Garden</SectionLabel>
+                  <div className="grid grid-cols-2 gap-2">
                     {THEMES.map((t) => (
                       <motion.button
                         key={t.id}
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => selectTheme(t.id)}
-                        className={`flex cursor-pointer flex-col items-stretch gap-1.5 rounded-[10px] border p-1.5 text-left transition-colors ${theme.id === t.id ? "border-foreground bg-accent" : "border-border hover:border-muted-foreground"}`}
+                        className={`relative flex cursor-pointer flex-col items-stretch gap-1.5 rounded-md border p-1.5 text-left transition-colors ${theme.id === t.id ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"}`}
                       >
                         <span
                           className="flex h-6 items-center justify-center gap-1 rounded-md"
@@ -367,15 +450,15 @@ export default function App() {
               )}
 
               <div className="flex flex-col gap-2.5">
-                <SectionLabel>Font</SectionLabel>
-                <div className="grid grid-cols-3 gap-2">
+                <SectionLabel>Lettering</SectionLabel>
+                <div className="grid grid-cols-2 gap-2">
                   {FONTS.map((f) => (
                     <motion.button
                       key={f.id}
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => selectFont(f.id)}
-                      className={`flex cursor-pointer flex-col items-center gap-1 rounded-[10px] border px-2 py-2 transition-colors ${font.id === f.id ? "border-foreground bg-accent" : "border-border hover:border-muted-foreground"}`}
+                      className={`relative flex cursor-pointer flex-col items-center gap-1 rounded-md border px-2 py-2 transition-colors ${font.id === f.id ? "border-foreground bg-accent" : "border-border bg-background hover:border-muted-foreground"}`}
                     >
                       <span
                         style={{ ...fontPreviewStyle(f), fontSize: 22 }}

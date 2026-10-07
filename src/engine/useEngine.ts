@@ -15,7 +15,7 @@ import {
 } from "./input.ts";
 import { currentText } from "./letters.ts";
 import { currentPreset } from "./poster.ts";
-import { exportVideo } from "./save.ts";
+import { exportImage, exportVideo } from "./save.ts";
 import { setTheme, setFont, setMode, updatePoster } from "./settings.ts";
 import { createEngineState, type EngineState } from "./state.ts";
 import type { Theme } from "./types.ts";
@@ -62,6 +62,8 @@ export function useEngine(
       handlePointerDown: (e: ReactPointerEvent) => handlePointerDown(state, e),
       handleClick: (e: ReactMouseEvent) => handleClick(state, e),
       exportVideo: () => exportVideo(state),
+      exportImage: (width: number, height: number) =>
+        exportImage(state, width, height),
     }),
     [state],
   );
