@@ -134,6 +134,23 @@ export default function App() {
           <Settings size={18} />
         </button>
 
+        <div
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-[calc(26px+env(safe-area-inset-top))] right-[calc(20px+env(safe-area-inset-right))] z-20 text-xs tracking-[.04em] transition-colors duration-500"
+          style={{ color: colors.text }}
+        >
+          by{" "}
+          <a
+            href="https://manishbisht.com/?ref=zenflow"
+            target="_blank"
+            rel="noopener"
+            className="underline underline-offset-2"
+          >
+            manish bisht
+          </a>
+        </div>
+
         <SegmentedControl
           highlightId="modeHighlight"
           options={[
