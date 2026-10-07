@@ -9,7 +9,7 @@ import {
 } from "./components/ui/sheet.tsx";
 import { ScrollArea } from "./components/ui/scroll-area.tsx";
 import { AnimatePresence, motion } from "framer-motion";
-import { FONTS, PRESETS, type Font, type Mode } from "./engine/config.ts";
+import { FONTS, PRESETS, POSTER_WIDTH, POSTER_HEIGHT, type Font, type Mode } from "./engine/config.ts";
 import { useEngine } from "./engine/useEngine.ts";
 import { THEMES } from "./themes/index.ts";
 import type { Theme } from "./engine/types.ts";
@@ -129,7 +129,7 @@ export default function App() {
           highlightId="modeHighlight"
           options={[
             ["type", "Type"],
-            ["poster", "Poster"],
+            ["poster", "Export"],
             ["clock", "Clock"],
           ]}
           selected={mode}
@@ -144,22 +144,27 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 grid cursor-default grid-cols-[minmax(280px,340px)_minmax(0,1fr)] bg-black text-xs tracking-[.03em] text-[#EDEDED] max-[720px]:flex max-[720px]:flex-col max-[720px]:overflow-y-auto max-[720px]:touch-pan-y"
+              style={{ background: colors.background }}
+              className="absolute inset-0 grid cursor-default grid-cols-[minmax(280px,340px)_minmax(0,1fr)] text-xs tracking-[.03em] text-foreground max-[720px]:flex max-[720px]:flex-col max-[720px]:overflow-y-auto max-[720px]:touch-pan-y"
             >
               {/* phone: fade under the settings button as the panel scrolls */}
-              <div className="pointer-events-none sticky top-0 z-[4] -mb-[calc(60px+env(safe-area-inset-top))] hidden h-[calc(60px+env(safe-area-inset-top))] flex-none bg-linear-to-b from-black from-60% to-transparent max-[720px]:-order-2 max-[720px]:block" />
+              <div className="pointer-events-none sticky top-0 z-[4] -mb-[calc(60px+env(safe-area-inset-top))] hidden h-[calc(60px+env(safe-area-inset-top))] flex-none max-[720px]:-order-2 max-[720px]:block"
+                style={{
+                  background: `linear-gradient(${colors.background} 60%, transparent)`,
+                }}
+              />
               <motion.div
                 initial={{ x: -32, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ ...spring, delay: 0.05 }}
-                className="flex flex-col gap-[26px] overflow-x-hidden overflow-y-auto border-r border-[#1E1E1E] bg-[#0A0A0A] px-[22px] pt-[72px] pb-8 max-[720px]:flex-none max-[720px]:overflow-visible max-[720px]:border-t max-[720px]:border-r-0 max-[720px]:px-4 max-[720px]:pt-5 max-[720px]:pb-[calc(32px+env(safe-area-inset-bottom))]"
+                className="flex flex-col gap-[26px] overflow-x-hidden overflow-y-auto border-r border-border bg-background px-[22px] pt-[72px] pb-8 max-[720px]:flex-none max-[720px]:overflow-visible max-[720px]:border-t max-[720px]:border-r-0 max-[720px]:px-4 max-[720px]:pt-5 max-[720px]:pb-[calc(32px+env(safe-area-inset-bottom))]"
               >
                 <div className="flex flex-col gap-1">
-                  <div className="font-display text-[26px] font-bold text-white">
-                    Poster
+                  <div className="font-display text-[26px] font-bold text-foreground">
+                    Export
                   </div>
-                  <div className="text-[#8C8C8C]">
-                    1:1 · {engine.currentPreset().loopMs / 1000}s loop · 30 fps
+                  <div className="text-muted-foreground">
+                    4:5 · {engine.currentPreset().loopMs / 1000}s loop · 30 fps
                   </div>
                 </div>
 
@@ -172,14 +177,14 @@ export default function App() {
                     }
                     spellCheck={false}
                     style={{ fontFamily: font.family, fontWeight: font.weight }}
-                    className="rounded-[10px] border border-[#2A2A2A] bg-black px-3 py-2.5 text-[22px] text-white outline-none focus:border-white"
+                    className="rounded-[10px] border border-border bg-background px-3 py-2.5 text-[22px] text-foreground outline-none focus:border-foreground"
                   />
                   <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() =>
                       updatePoster({ seed: Math.floor(Math.random() * 1e6) })
                     }
-                    className="cursor-pointer self-start rounded-full border border-[#2A2A2A] px-3 py-2 hover:border-white"
+                    className="cursor-pointer self-start rounded-full border border-border px-3 py-2 hover:border-foreground"
                   >
                     Regrow
                   </motion.button>
@@ -194,17 +199,17 @@ export default function App() {
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => updatePoster({ preset: p.id })}
-                        className="relative flex cursor-pointer flex-col gap-1 rounded-[10px] border border-[#2A2A2A] px-3 py-2.5 text-left text-white"
+                        className="relative flex cursor-pointer flex-col gap-1 rounded-[10px] border border-border px-3 py-2.5 text-left text-foreground"
                       >
                         {presetId === p.id && (
                           <motion.span
                             layoutId="presetHighlight"
                             transition={spring}
-                            className="absolute inset-[-1px] rounded-[10px] border border-white bg-[#161616]"
+                            className="absolute inset-[-1px] rounded-[10px] border border-foreground bg-accent"
                           />
                         )}
                         <span className="relative text-[13px]">{p.label}</span>
-                        <span className="relative text-[11px] text-[#8C8C8C]">
+                        <span className="relative text-[11px] text-muted-foreground">
                           {p.description.replace(
                             "{visitor}",
                             theme.visitorName,
@@ -215,13 +220,31 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-2.5 border-t border-[#1E1E1E] pt-5">
-                  <SectionLabel>Export · 1080 × 1080 loop</SectionLabel>
+                <div className="flex flex-col gap-2.5 border-t border-border pt-5">
+                  <SectionLabel>Still · current frame</SectionLabel>
+                  <div className="flex gap-2">
+                    {(["PNG", "SVG"] as const).map((format) => (
+                      <motion.button
+                        key={format}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() =>
+                          format === "PNG" ? engine.savePNG() : engine.saveSVG()
+                        }
+                        className="cursor-pointer rounded-full border border-border px-3.5 py-2 text-muted-foreground hover:border-foreground hover:text-foreground"
+                      >
+                        {format}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2.5">
+                  <SectionLabel>Loop · 1080 × 1350</SectionLabel>
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => engine.exportVideo()}
                     disabled={isExporting}
-                    className="cursor-pointer rounded-full bg-white px-3.5 py-3 font-medium text-black disabled:opacity-60"
+                    className="cursor-pointer rounded-full bg-foreground px-3.5 py-3 font-medium text-background disabled:opacity-60"
                   >
                     {videoButtonLabel}
                   </motion.button>
@@ -229,11 +252,11 @@ export default function App() {
                     whileTap={{ scale: 0.97 }}
                     onClick={() => engine.exportFrames()}
                     disabled={isExporting}
-                    className="cursor-pointer rounded-full border border-[#3A3A3A] px-3.5 py-[11px] hover:border-white disabled:opacity-60"
+                    className="cursor-pointer rounded-full border border-border px-3.5 py-[11px] hover:border-foreground disabled:opacity-60"
                   >
                     PNG frames (.zip)
                   </motion.button>
-                  <div className="min-h-4 text-[#8C8C8C]">
+                  <div className="min-h-4 text-muted-foreground">
                     <AnimatePresence mode="wait">
                       <motion.span
                         key={exportStatus}
@@ -253,12 +276,12 @@ export default function App() {
               <div className="flex min-w-0 items-center justify-center px-8 pt-14 pb-8 max-[720px]:-order-1 max-[720px]:flex-none max-[720px]:px-4 max-[720px]:pt-[calc(64px+env(safe-area-inset-top))] max-[720px]:pb-3">
                 <motion.canvas
                   ref={engine.setPosterCanvas}
-                  width={1080}
-                  height={1080}
+                  width={POSTER_WIDTH}
+                  height={POSTER_HEIGHT}
                   initial={{ scale: 0.94, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ ...spring, delay: 0.1 }}
-                  className="block aspect-square h-auto w-[min(100%,calc(100vh-96px))] border border-[#1E1E1E] max-[720px]:w-full max-[720px]:max-w-[520px]"
+                  className="block aspect-[4/5] h-auto w-[min(100%,calc((100vh-96px)*0.8))] max-[720px]:w-full max-[720px]:max-w-[520px]"
                 />
               </div>
             </motion.div>
@@ -385,26 +408,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* poster mode has its own loop export in the side panel */}
-              {mode !== "poster" && (
-                <div className="flex flex-col gap-2.5 border-t border-border pt-5">
-                  <SectionLabel>Export</SectionLabel>
-                  <div className="flex gap-2">
-                    {(["PNG", "SVG"] as const).map((format) => (
-                      <motion.button
-                        key={format}
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() =>
-                          format === "PNG" ? engine.savePNG() : engine.saveSVG()
-                        }
-                        className="cursor-pointer rounded-full border border-border px-3.5 py-2 text-muted-foreground hover:border-foreground hover:text-foreground"
-                      >
-                        {format}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </ScrollArea>
         </SheetContent>

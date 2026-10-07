@@ -1,12 +1,12 @@
-// Saving: PNG/SVG of the live view, video/frames of the poster loop.
+// Saving: PNG/SVG stills (the poster when in export mode, else the live view), video/frames of the poster loop.
 import { traceSmoothPath, type PathSink } from "./kit.ts";
 import {
   exportVideo as recordVideo,
   exportFrames as renderFramesZip,
   download,
 } from "./export.ts";
-import { POSTER_SIZE } from "./config.ts";
-import { drawPosterFrame } from "./poster.ts";
+import { POSTER_WIDTH, POSTER_HEIGHT } from "./config.ts";
+import { drawPoster, drawPosterFrame } from "./poster.ts";
 import { liveSceneState, paintLiveView, renderScene } from "./render.ts";
 import { colorsOf, type EngineState } from "./state.ts";
 import type { Painter } from "./types.ts";
@@ -25,6 +25,12 @@ export function exportFileName(state: EngineState) {
   );
 }
 export function savePNG(state: EngineState) {
+  if (state.mode === "poster") {
+    state.posterCanvas?.toBlob(
+      (blob) => blob && download(blob, `${exportFileName(state)}.png`),
+    );
+    return;
+  }
   paintLiveView(state, performance.now(), false);
   state.canvas.toBlob(
     (blob) => blob && download(blob, `${state.theme.id}.png`),
@@ -75,9 +81,14 @@ export function saveSVG(state: EngineState) {
       );
     },
   };
-  renderScene(state, svgPainter, performance.now(), liveSceneState(state));
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${round(state.width)}" height="${round(state.height)}" viewBox="0 0 ${round(state.width)} ${round(state.height)}"><rect width="100%" height="100%" fill="${colorsOf(state).background}"/>${parts.join("")}</svg>`;
-  download(new Blob([svg], { type: "image/svg+xml" }), `${state.theme.id}.svg`);
+  const isPoster = state.mode === "poster",
+    width = isPoster ? POSTER_WIDTH : state.width,
+    height = isPoster ? POSTER_HEIGHT : state.height;
+  if (isPoster)
+    drawPoster(state, svgPainter, performance.now() - state.posterStartedAt);
+  else renderScene(state, svgPainter, performance.now(), liveSceneState(state));
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${round(width)}" height="${round(height)}" viewBox="0 0 ${round(width)} ${round(height)}"><rect width="100%" height="100%" fill="${colorsOf(state).background}"/>${parts.join("")}</svg>`;
+  download(new Blob([svg], { type: "image/svg+xml" }), `${isPoster ? exportFileName(state) : state.theme.id}.svg`);
 }
 export function reportStatus(
   state: EngineState,
@@ -100,7 +111,8 @@ export async function exportVideo(state: EngineState) {
   const result = await recordVideo(
     (context, t) => drawPosterFrame(state, context, t),
     state.poster.loopMs,
-    POSTER_SIZE,
+    POSTER_WIDTH,
+    POSTER_HEIGHT,
     state.videoMimeType,
     (percent) => reportStatus(state, `Recording ${percent}%`),
     exportFileName(state),
@@ -117,7 +129,8 @@ export async function exportFrames(state: EngineState) {
   const frameCount = await renderFramesZip(
     (context, t) => drawPosterFrame(state, context, t),
     state.poster.loopMs,
-    POSTER_SIZE,
+    POSTER_WIDTH,
+    POSTER_HEIGHT,
     (percent) => reportStatus(state, `Rendering ${percent}%`),
     exportFileName(state),
   );

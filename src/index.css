@@ -24,7 +24,7 @@
 
 @theme {
   --font-sans: 'Geist', system-ui, sans-serif;
-  --font-display: 'Playfair Display', Georgia, serif;
+  --font-display: 'Geist', system-ui, sans-serif;
 }
 
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; overscroll-behavior: none; }

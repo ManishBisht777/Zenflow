@@ -90,4 +90,4 @@ export const cssFont = (font: Font, px: number) =>
   `${font.weight} ${px}px ${font.family}`;
 
 export const INPUT_SENTINEL = String.fromCharCode(0x200b); // kept in the hidden field so Backspace on an empty field still reports
-export const POSTER_SIZE = 1080;
+export const POSTER_WIDTH = 1080, POSTER_HEIGHT = 1350; // Instagram portrait 4:5

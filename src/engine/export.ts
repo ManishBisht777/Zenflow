@@ -12,9 +12,10 @@ export function download(blob: Blob, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(link.href), 4000);
 }
 
-const createSquareCanvas = (size: number) => {
+const createCanvas = (width: number, height: number) => {
   const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
+  canvas.width = width;
+  canvas.height = height;
   return canvas;
 };
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -22,12 +23,13 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function exportVideo(
   drawFrame: DrawFrame,
   loopMs: number,
-  size: number,
+  width: number,
+  height: number,
   mimeType: string,
   onProgress: (percent: number) => void,
   fileName: string,
 ) {
-  const canvas = createSquareCanvas(size),
+  const canvas = createCanvas(width, height),
     context = canvas.getContext("2d")!,
     stream = canvas.captureStream(0);
   const track = stream.getVideoTracks()[0] as CanvasCaptureMediaStreamTrack;
@@ -68,11 +70,12 @@ export async function exportVideo(
 export async function exportFrames(
   drawFrame: DrawFrame,
   loopMs: number,
-  size: number,
+  width: number,
+  height: number,
   onProgress: (percent: number) => void,
   fileName: string,
 ) {
-  const canvas = createSquareCanvas(size),
+  const canvas = createCanvas(width, height),
     context = canvas.getContext("2d")!,
     frameCount = Math.round((loopMs / 1000) * FPS);
   const files: { name: string; data: Uint8Array }[] = [];

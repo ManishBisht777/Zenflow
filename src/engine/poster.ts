@@ -1,6 +1,6 @@
 // Poster mode: a seeded, square, looping scene; each preset changes timing or adds a warp.
 import { easeOut, seededRandom } from "./kit.ts";
-import { PRESETS, POSTER_SIZE } from "./config.ts";
+import { PRESETS, POSTER_WIDTH, POSTER_HEIGHT } from "./config.ts";
 import { createLetter, growLetter } from "./letters.ts";
 import { layoutLetters } from "./layout.ts";
 import { canvasPainter, renderScene, type SceneState } from "./render.ts";
@@ -84,7 +84,7 @@ export function buildPoster(state: EngineState) {
     }
   });
   state.random = Math.random;
-  const layout = layoutLetters(state, letters, POSTER_SIZE, POSTER_SIZE, false);
+  const layout = layoutLetters(state, letters, POSTER_WIDTH, POSTER_HEIGHT, false);
   // bounding box of the whole scene (type + every ornament)
   const fontSize = layout.fontSize;
   let left = 1e9,
@@ -131,17 +131,18 @@ export function buildPoster(state: EngineState) {
       typeTop = Math.min(typeTop, l.targetY - 0.72 * fontSize);
       typeBottom = Math.max(typeBottom, l.targetY);
     }
-  const half = POSTER_SIZE * 0.44,
+  const halfX = POSTER_WIDTH * 0.44,
+    halfY = POSTER_HEIGHT * 0.44,
     typeCentreX = (typeLeft + typeRight) / 2,
     typeCentreY = (typeTop + typeBottom) / 2;
   const scale = Math.min(
     1.25,
-    half / Math.max(1, typeCentreX - left, right - typeCentreX),
-    half / Math.max(1, typeCentreY - top, bottom - typeCentreY),
+    halfX / Math.max(1, typeCentreX - left, right - typeCentreX),
+    halfY / Math.max(1, typeCentreY - top, bottom - typeCentreY),
   );
   letters.forEach((l) => {
-    l.targetX = POSTER_SIZE / 2 + (l.targetX - typeCentreX) * scale;
-    l.targetY = POSTER_SIZE / 2 + (l.targetY - typeCentreY) * scale;
+    l.targetX = POSTER_WIDTH / 2 + (l.targetX - typeCentreX) * scale;
+    l.targetY = POSTER_HEIGHT / 2 + (l.targetY - typeCentreY) * scale;
     l.width *= scale;
     l.x = l.targetX;
     l.y = l.targetY;
@@ -236,15 +237,19 @@ export function drawPosterFrame(
   context: CanvasRenderingContext2D,
   timeMs: number,
 ) {
+  if (!state.poster) return;
+  context.setTransform(1, 0, 0, 1, 0, 0);
+  context.fillStyle = colorsOf(state).background;
+  context.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT);
+  drawPoster(state, canvasPainter(context, state.font), timeMs);
+}
+// the poster scene through any painter (canvas for frames, SVG for stills); background is the caller's
+export function drawPoster(state: EngineState, painter: Painter, timeMs: number) {
   const poster = state.poster;
   if (!poster) return;
   const colors = colorsOf(state);
-  context.setTransform(1, 0, 0, 1, 0, 0);
-  context.fillStyle = colors.background;
-  context.fillRect(0, 0, POSTER_SIZE, POSTER_SIZE);
   const loopTime = ((timeMs % poster.loopMs) + poster.loopMs) % poster.loopMs,
     letters = poster.letters,
-    painter = canvasPainter(context, state.font),
     fontSize = poster.fontSize;
   const scene: SceneState = {
     letters,
@@ -293,7 +298,7 @@ export function drawPosterFrame(
     const front = -0.35 + (loopTime / poster.loopMs) * 1.9;
     scene.warp = (x, y, l) => {
       const heightAbove = Math.max(0, (l.y - y) / fontSize),
-        gust = gustAt(l.x / POSTER_SIZE - front);
+        gust = gustAt(l.x / POSTER_WIDTH - front);
       const idle = Math.sin((loopTime / 1000) * 1.6 + l.x * 0.01) * 0.012;
       return [
         x +
@@ -303,12 +308,12 @@ export function drawPosterFrame(
       ];
     };
     scene.extraRotation = (o) =>
-      gustAt((o.x || 0) / POSTER_SIZE - front) * 0.35;
+      gustAt((o.x || 0) / POSTER_WIDTH - front) * 0.35;
   } else if (poster.preset === "reach") {
     setBirths(fullyGrown);
     const phase = (loopTime / poster.loopMs) * Math.PI * 2,
-      lightX = 540 + Math.sin(phase) * 430,
-      lightY = 540 + Math.sin(phase * 2) * 260;
+      lightX = POSTER_WIDTH / 2 + Math.sin(phase) * 430,
+      lightY = POSTER_HEIGHT / 2 + Math.sin(phase * 2) * 260;
     state.reachLight = [lightX, lightY];
     scene.warp = (x, y, l) => {
       const dx = lightX - l.x,
@@ -371,8 +376,8 @@ export function drawPosterFrame(
       Math.floor(loopTime / 400) % 2 === 0 ||
       (last && loopTime - last.bornAt < 300)
     ) {
-      const x = last ? last.targetX + last.width / 2 + 0.07 * fontSize : 540,
-        y = last ? last.targetY - 0.33 * fontSize : 540,
+      const x = last ? last.targetX + last.width / 2 + 0.07 * fontSize : POSTER_WIDTH / 2,
+        y = last ? last.targetY - 0.33 * fontSize : POSTER_HEIGHT / 2,
         w = Math.max(2, fontSize * 0.03),
         h = 0.8 * fontSize;
       painter.fillRect(x - w / 2, y - h / 2, w, h, colors.text);
