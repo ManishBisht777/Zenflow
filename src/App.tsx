@@ -66,6 +66,7 @@ export default function App() {
     }
     engine.setMode(next);
     setMode(next);
+    engine.refocusTyping();
   };
   const updatePoster = (changes: {
     preset?: string;
@@ -123,6 +124,18 @@ export default function App() {
         >
           <Settings size={18} />
         </button>
+
+        <SegmentedControl
+          highlightId="modeHighlight"
+          options={[
+            ["type", "Type"],
+            ["poster", "Poster"],
+            ["clock", "Clock"],
+          ]}
+          selected={mode}
+          onSelect={selectMode}
+          className="absolute top-[calc(16px+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 shadow-sm"
+        />
 
         <AnimatePresence>
           {mode === "poster" && (
@@ -268,27 +281,12 @@ export default function App() {
               Settings
             </SheetTitle>
             <SheetDescription className="text-xs">
-              Mode, theme, font and palette.
+              Theme, font and palette.
             </SheetDescription>
           </SheetHeader>
 
           <ScrollArea className="min-h-0 flex-1">
             <div className="flex flex-col gap-[26px] px-5 pb-[calc(20px+env(safe-area-inset-bottom))]">
-              <div className="flex flex-col gap-2.5">
-                <SectionLabel>Mode</SectionLabel>
-                <SegmentedControl
-                  highlightId="modeHighlight"
-                  options={[
-                    ["type", "Type"],
-                    ["poster", "Poster"],
-                    ["clock", "Clock"],
-                  ]}
-                  selected={mode}
-                  onSelect={selectMode}
-                  className="self-start"
-                />
-              </div>
-
               {THEMES.length > 1 && (
                 <div className="flex flex-col gap-2.5">
                   <SectionLabel>Theme</SectionLabel>

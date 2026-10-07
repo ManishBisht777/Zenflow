@@ -26,7 +26,7 @@ export function SegmentedControl<T extends string>({
 }) {
   return (
     <div
-      className={`z-10 flex gap-1 rounded-full border border-border bg-accent p-1 ${className}`}
+      className={`flex gap-1 rounded-full border border-border bg-accent p-1 ${className}`}
     >
       {options.map(([value, label, style, tooltip]) => (
         <button

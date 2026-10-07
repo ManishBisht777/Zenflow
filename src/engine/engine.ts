@@ -3,6 +3,7 @@
 // What grows and how it looks lives in the theme (see src/themes).
 import { INPUT_SENTINEL } from "./config.ts";
 import { syncClock } from "./clock.ts";
+import { addCharacter } from "./letters.ts";
 import { applyInputChange, handleKeyDown, releasePointer, syncToVisualViewport } from "./input.ts";
 import { resize } from "./layout.ts";
 import { buildPoster, drawPosterFrame } from "./poster.ts";
@@ -73,6 +74,9 @@ export function mount(
     syncToVisualViewport(state);
   }
   resize(state);
+  // greet first-time landers with the name already growing (guard: dev StrictMode mounts twice)
+  if (!state.letters.length)
+    for (const char of "Zenflow") addCharacter(state, char, performance.now());
   remeasureWhenFontLoads(state);
   buildPoster(state);
   const loop = () => {

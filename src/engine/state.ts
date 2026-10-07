@@ -105,7 +105,7 @@ export function createEngineState(theme: Theme): EngineState {
     paletteIndex: 0,
     mode: "type",
     preset: "breathe",
-    posterText: "in bloom",
+    posterText: "Zenflow",
     seed: 7,
     density: 1,
     handDrawnJitter: true,
