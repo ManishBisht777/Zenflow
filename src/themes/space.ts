@@ -362,8 +362,8 @@ const space: Theme = {
   visitorName: "UFO",
   typingHint: "type to launch",
   palettes: [
-    palette("Deep", "#05060F", "#FFB84D", "#6C7BFF", "#FFFFFF", "#FFFFFF"),
-    palette("Nebula", "#1A0B2E", "#FF5DA2", "#7AE7FF", "#FFF3B0", "#FFFFFF"),
+    palette("Deep", "#05060F", "#FFB84D", "#6C7BFF", "#F0F3FF", "#E6EBFF"),
+    palette("Nebula", "#1A0B2E", "#FF5DA2", "#7AE7FF", "#FFF3B0", "#F3E8FF"),
     palette("Mono", "#000000", "#F2F2F2", "#6E6E6E", "#FFFFFF", "#FFFFFF"),
   ],
   growLetter,

@@ -41,7 +41,7 @@ export const palettes: GardenPalette[] = [
     "#1B4D20",
     "#6B4226",
     "#FFE5D9",
-    "#111111",
+    "#2B2118",
     ["#FF3B1F", "#FF9F1C", "#F15BB5", "#7B2CBF", "#FFC300"],
   ),
   palette(
@@ -61,7 +61,7 @@ export const palettes: GardenPalette[] = [
     "#1A7A44",
     "#7C4E33",
     "#FBE3FF",
-    "#FFFFFF",
+    "#F6E9FF",
     ["#E63CFF", "#FF5FA2", "#8B5CF6", "#FFD166", "#FF7B54"],
   ),
   palette(
@@ -81,7 +81,7 @@ export const palettes: GardenPalette[] = [
     "#1B5E3A",
     "#6B4226",
     "#FFF0F2",
-    "#1A1A1A",
+    "#3A1420",
     ["#C8102E", "#FF6F00", "#8E44AD", "#E91E63", "#F9A825"],
   ),
   palette(

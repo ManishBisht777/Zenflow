@@ -462,7 +462,7 @@ const mountain: Theme = {
       "#2A1F1A",
       "#1B2346",
       "#F4F1DE",
-      "#FFFFFF",
+      "#E6ECFF",
     ),
     palette(
       "Mono",

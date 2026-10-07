@@ -485,7 +485,7 @@ const desert: Theme = {
       ["#FF7AB6", "#FFE066"],
       "#F4F1DE",
       "#4A3F66",
-      "#FFFFFF",
+      "#E8ECFF",
     ),
     palette(
       "Mono",

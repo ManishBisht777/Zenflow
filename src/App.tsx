@@ -24,6 +24,7 @@ import {
   spring,
   SegmentedControl,
   SectionLabel,
+  PaletteSwatch,
 } from "./components/controls.tsx";
 
 export default function App() {
@@ -144,6 +145,32 @@ export default function App() {
           onSelect={selectMode}
           className="absolute top-[calc(16px+env(safe-area-inset-top))] left-1/2 z-20 -translate-x-1/2 shadow-sm"
         />
+
+        <AnimatePresence>
+          {mode !== "poster" && (
+            <motion.div
+              key="palettes"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 12 }}
+              transition={{ duration: 0.35 }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
+              className="absolute bottom-[calc(20px+env(safe-area-inset-bottom))] left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border px-1.5 py-1 shadow-sm"
+              style={{ background: colors.background }}
+            >
+              {theme.palettes.map((p, i) => (
+                <PaletteSwatch
+                  key={theme.id + i}
+                  palette={p}
+                  isSelected={paletteIndex === i}
+                  ringColor={colors.text}
+                  onSelect={() => selectPalette(i)}
+                />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <AnimatePresence>
           {mode === "poster" && (
@@ -284,7 +311,7 @@ export default function App() {
               Settings
             </SheetTitle>
             <SheetDescription className="text-xs">
-              Theme, font and palette.
+              Theme and font.
             </SheetDescription>
           </SheetHeader>
 
@@ -342,47 +369,6 @@ export default function App() {
                       <span className="text-[10px] text-muted-foreground">
                         {f.name}
                       </span>
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2.5">
-                <SectionLabel>Palette</SectionLabel>
-                <div className="grid grid-cols-2 gap-2">
-                  {theme.palettes.map((p, i) => (
-                    <motion.button
-                      key={theme.id + i}
-                      whileHover={{ y: -2 }}
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => selectPalette(i)}
-                      aria-label={p.name}
-                      className={`flex cursor-pointer flex-col items-stretch gap-2 rounded-xl border px-1.5 pt-1.5 pb-2 text-left transition-colors ${paletteIndex === i ? "border-foreground" : "border-border hover:border-muted-foreground"}`}
-                    >
-                      <span
-                        className="flex h-11 items-center justify-center rounded-lg"
-                        style={{ background: p.background }}
-                      >
-                        <span
-                          className="size-[18px] rounded-full"
-                          style={{ background: p.primary }}
-                        />
-                        <span
-                          className="-ml-1 size-3 rounded-full"
-                          style={{ background: p.secondary }}
-                        />
-                        <span
-                          className="ml-2 text-lg"
-                          style={{
-                            color: p.text,
-                            fontFamily: font.family,
-                            fontWeight: font.weight,
-                          }}
-                        >
-                          Aa
-                        </span>
-                      </span>
-                      <span className="px-1">{p.name}</span>
                     </motion.button>
                   ))}
                 </div>

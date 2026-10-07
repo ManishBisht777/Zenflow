@@ -397,7 +397,7 @@ const city: Theme = {
       ["#FFD166", "#FFE8A3"],
       "#1A2340",
       "#FFD166",
-      "#FFFFFF",
+      "#E4EAFF",
     ),
     palette(
       "Dusk",
@@ -406,7 +406,7 @@ const city: Theme = {
       ["#FFB86B", "#FF8FA3"],
       "#7A3E66",
       "#FFB86B",
-      "#FFFFFF",
+      "#FBE9F5",
     ),
     palette(
       "Neon",
@@ -415,7 +415,7 @@ const city: Theme = {
       ["#FF2E97", "#00F0FF", "#F9F871"],
       "#1A1230",
       "#FF2E97",
-      "#FFFFFF",
+      "#F2EDFF",
     ),
     palette(
       "Noon",
@@ -433,7 +433,7 @@ const city: Theme = {
       ["#BFD7FF"],
       "#2A62C4",
       "#BFD7FF",
-      "#FFFFFF",
+      "#E3EEFF",
     ),
     palette(
       "Mono",

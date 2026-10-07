@@ -1,5 +1,6 @@
-// Small shared UI pieces: segmented pill switcher, section label.
+// Small shared UI pieces: segmented pill switcher, palette swatch, section label.
 import { motion } from "framer-motion";
+import type { Palette } from "../engine/types.ts";
 
 export const spring = { type: "spring", stiffness: 500, damping: 38 } as const;
 
@@ -55,3 +56,42 @@ export const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     {children}
   </div>
 );
+
+// round palette button: background with a primary dot, ringed in the current text color when selected
+export function PaletteSwatch({
+  palette,
+  isSelected,
+  ringColor,
+  onSelect,
+}: {
+  palette: Palette;
+  isSelected: boolean;
+  ringColor: string;
+  onSelect: () => void;
+}) {
+  return (
+    <motion.button
+      onClick={onSelect}
+      aria-label={palette.name}
+      title={palette.name}
+      animate={{ scale: isSelected ? 1.1 : 1 }}
+      whileHover={{ scale: 1.15 }}
+      whileTap={{ scale: 0.9 }}
+      transition={spring}
+      className="flex size-[22px] cursor-pointer items-center justify-center rounded-full border-[1.5px] p-0"
+      style={{
+        background: palette.background,
+        borderColor: isSelected
+          ? ringColor
+          : palette.background === ringColor
+            ? "var(--border)"
+            : "transparent",
+      }}
+    >
+      <span
+        className="size-[46%] rounded-full"
+        style={{ background: palette.primary }}
+      />
+    </motion.button>
+  );
+}
