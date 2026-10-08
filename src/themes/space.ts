@@ -7,12 +7,14 @@ import type {
   Ornament,
   Palette,
   Point,
+  Drawing,
   Theme,
 } from "../engine/types.ts";
 
 // ---------- generation ----------
 type Random = () => number;
 const PLANET_STYLES = ["plain", "ring", "bands", "crater", "moon"] as const;
+const SPACECRAFT = ["rocket", "ship", "astronaut"] as const;
 
 // scatter planets around a letter, avoiding overlaps with ones already placed
 function addPlanets(
@@ -55,7 +57,7 @@ function addPlanets(
       tilt: (random() - 0.5) * 1.2,
       moonAngle: random() * 6.28,
       craterAngle: random() * 6.28,
-      layer: overLetter ? (random() < 0.2 ? 1 : 0) : random() < 0.6 ? 1 : 0,
+      layer: overLetter ? 0 : random() < 0.6 ? 1 : 0,
       delay: delay + i * (80 + random() * 160),
     };
     out.push(planet);
@@ -96,6 +98,30 @@ function addStars(
   }
 }
 
+function addTravelers(
+  random: Random,
+  out: Ornament[],
+  nextId: () => number,
+  letterWidth: number,
+  count: number,
+  delay: number,
+) {
+  for (let i = 0; i < count; i++) {
+    const kind = SPACECRAFT[Math.floor(random() * SPACECRAFT.length)];
+    out.push({
+      kind,
+      id: nextId(),
+      x: (random() - 0.5) * letterWidth * 1.9,
+      y: -0.35 + (random() - 0.5) * 2.1,
+      size: kind === "astronaut" ? 0.12 + random() * 0.04 : 0.11 + random() * 0.08,
+      angle: (random() - 0.5) * 1.1,
+      tint: random() < 0.5 ? "primary" : "secondary",
+      layer: 0,
+      delay: delay + i * (120 + random() * 180),
+    });
+  }
+}
+
 function growLetter(letter: Letter, grow: GrowContext) {
   const random = seededRandom(
     (letter.wordSeed ^ Math.imul(letter.indexInWord + 1, 2654435761)) +
@@ -111,9 +137,10 @@ function growLetter(letter: Letter, grow: GrowContext) {
     ornaments,
     nextId,
     width,
-    1 +
+    2 +
       (random() < 0.6 * density ? 1 : 0) +
-      (random() < 0.25 * density ? 1 : 0),
+      (random() < 0.45 * density ? 1 : 0) +
+      (random() < 0.2 * density ? 1 : 0),
     40,
     letter.indexInWord === 0,
   );
@@ -124,6 +151,14 @@ function growLetter(letter: Letter, grow: GrowContext) {
     width,
     Math.round((3 + random() * 5) * density),
     0,
+  );
+  addTravelers(
+    random,
+    ornaments,
+    nextId,
+    width,
+    1 + (random() < 0.38 * density ? 1 : 0),
+    180,
   );
   return { ornaments, tendril: [] };
 }
@@ -139,7 +174,7 @@ function growWordEnd(letter: Letter, startsAfter: number, grow: GrowContext) {
   let idCounter = 50;
   const nextId = () => letter.id * 100 + idCounter++;
   const width = grow.glyphWidth(letter.char);
-  addPlanets(random, ornaments, nextId, width, 1, startsAfter + 40);
+  addPlanets(random, ornaments, nextId, width, 2 + (random() < 0.55 ? 1 : 0), startsAfter + 40);
   addStars(
     random,
     ornaments,
@@ -307,7 +342,66 @@ const draw: Theme["draw"] = {
       );
     }
   },
+  rocket(painter, item, drawing) { drawRocket(painter, item, drawing); },
+  ship(painter, item, drawing) { drawShip(painter, item, drawing); },
+  astronaut(painter, item, drawing) { drawAstronaut(painter, item, drawing); },
 };
+
+function withLocal(
+  painter: Painter,
+  item: Ornament,
+  drawing: Drawing,
+  paint: (p: Painter, x: number, y: number, size: number, angle: number, colors: Palette) => void,
+) {
+  const grown = springIn((drawing.age - item.delay) / 1000, 7, 14) * drawing.vitality;
+  if (grown <= 0) return;
+  const [x, y] = drawing.toScreen(item.x!, item.y!);
+  paint(painter, x, y, item.size * drawing.fontSize * grown, item.angle, drawing.colors);
+}
+
+function localPoint(x: number, y: number, size: number, angle: number, px: number, py: number): Point {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  return [x + (px * cos - py * sin) * size, y + (px * sin + py * cos) * size];
+}
+
+function drawRocket(painter: Painter, item: Ornament, drawing: Drawing) {
+  withLocal(painter, item, drawing, (p, x, y, size, angle, colors) => {
+    const poly = (points: Point[]) => points.map(([px, py]) => localPoint(x, y, size, angle, px, py));
+    p.fill(poly([[-0.28, 0.5], [0, -0.65], [0.28, 0.5], [0, 0.34]]), colors[item.tint as "primary" | "secondary"]);
+    p.fill(poly([[-0.23, 0.27], [-0.55, 0.62], [-0.12, 0.49]]), colors.accent);
+    p.fill(poly([[0.23, 0.27], [0.55, 0.62], [0.12, 0.49]]), colors.accent);
+    const window = localPoint(x, y, size, angle, 0, -0.12);
+    p.fill(ellipsePoints(window[0], window[1], size * 0.12, size * 0.12, 12), colors.background);
+    p.fill(poly([[-0.13, 0.48], [0, 0.95], [0.13, 0.48]]), colors.primary);
+  });
+}
+
+function drawShip(painter: Painter, item: Ornament, drawing: Drawing) {
+  withLocal(painter, item, drawing, (p, x, y, size, angle, colors) => {
+    const pt = ([px, py]: Point) => localPoint(x, y, size, angle, px, py);
+    p.fill([pt([-0.8, 0.1]), pt([-0.35, -0.23]), pt([0.1, -0.63]), pt([0.58, -0.15]), pt([0.76, 0.16]), pt([0.2, 0.36]), pt([-0.53, 0.3])], colors[item.tint as "primary" | "secondary"]);
+    const window = pt([0.14, -0.14]);
+    p.fill(ellipsePoints(window[0], window[1], size * 0.14, size * 0.14, 12), colors.accent);
+    p.fill([pt([-0.35, 0.26]), pt([-0.05, 0.43]), pt([-0.52, 0.76])], colors.primary);
+  });
+}
+
+function drawAstronaut(painter: Painter, item: Ornament, drawing: Drawing) {
+  withLocal(painter, item, drawing, (p, x, y, size, angle, colors) => {
+    const pt = ([px, py]: Point) => localPoint(x, y, size, angle, px, py);
+    const suit = colors[item.tint as "primary" | "secondary"];
+    let center = pt([0, -0.3]);
+    p.fill(ellipsePoints(center[0], center[1], size * 0.34, size * 0.36, 16), suit);
+    center = pt([0, -0.32]);
+    p.fill(ellipsePoints(center[0], center[1], size * 0.2, size * 0.19, 16), colors.accent);
+    p.fill([pt([-0.23, -0.02]), pt([0.23, -0.02]), pt([0.3, 0.47]), pt([-0.3, 0.47])], suit);
+    const width = Math.max(1, size * 0.12);
+    p.stroke([pt([-0.29, 0.08]), pt([-0.48, 0.33]), pt([-0.35, 0.48])], colors.accent, width);
+    p.stroke([pt([0.29, 0.08]), pt([0.48, 0.33]), pt([0.35, 0.48])], colors.accent, width);
+    p.stroke([pt([-0.17, 0.42]), pt([-0.28, 0.72])], colors.accent, width);
+    p.stroke([pt([0.17, 0.42]), pt([0.28, 0.72])], colors.accent, width);
+  });
+}
 
 function drawUfo(
   painter: Painter,
@@ -362,14 +456,14 @@ const space: Theme = {
   visitorName: "UFO",
   typingHint: "type to launch",
   palettes: [
-    palette("Deep", "#05060F", "#FFB84D", "#6C7BFF", "#F0F3FF", "#E6EBFF"),
-    palette("Nebula", "#1A0B2E", "#FF5DA2", "#7AE7FF", "#FFF3B0", "#F3E8FF"),
-    palette("Mono", "#000000", "#F2F2F2", "#6E6E6E", "#FFFFFF", "#FFFFFF"),
+    palette("Deep Space", "#090B24", "#FF9F68", "#6685FF", "#8FE8E1", "#F1ECFF"),
+    palette("Nebula", "#170923", "#FF5DA2", "#55D6F5", "#FFE18A", "#F7EAFE"),
+    palette("Aurora", "#071A2A", "#55E0BD", "#A27BFF", "#FFCA72", "#EAF5FF"),
   ],
   growLetter,
   growWordEnd,
   draw,
-  ornamentRadius: (o) => (o.kind === "planet" ? o.radius * 1.8 : o.size),
+  ornamentRadius: (o) => (o.kind === "planet" ? o.radius * 1.8 : o.size * 1.5),
   drawVisitor: drawUfo,
 };
 export default space;

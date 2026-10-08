@@ -12,6 +12,8 @@ import type {
 
 // ---------- generation ----------
 type Random = () => number;
+const ORNAMENT_DROP_CHANCE = 0.1;
+const VESSELS = ["ship", "submarine"] as const;
 const pickTint = (random: Random) =>
   random() < 0.55 ? "primary" : random() < 0.6 ? "secondary" : "accent";
 // legibility: things over the letter body mostly go behind it
@@ -120,6 +122,32 @@ function addBubbles(
   }
 }
 
+function addVessels(
+  random: Random,
+  out: Ornament[],
+  nextId: () => number,
+  letterWidth: number,
+  count: number,
+  delay: number,
+) {
+  for (let i = 0; i < count; i++) {
+    const x = (random() - 0.5) * letterWidth * 1.9;
+    const y = -0.35 + (random() - 0.5) * 1.8;
+    const overLetter = y > -0.78 && y < 0.05 && Math.abs(x) < letterWidth * 0.5;
+    out.push({
+      kind: VESSELS[Math.floor(random() * VESSELS.length)],
+      id: nextId(),
+      x,
+      y,
+      size: 0.14 + random() * 0.07,
+      angle: (random() - 0.5) * 0.45,
+      tint: pickTint(random),
+      layer: overLetter ? 0 : random() < 0.6 ? 1 : 0,
+      delay: delay + i * (150 + random() * 180),
+    });
+  }
+}
+
 function growLetter(letter: Letter, grow: GrowContext) {
   const random = seededRandom(
     (letter.wordSeed ^ Math.imul(letter.indexInWord + 1, 2654435761)) +
@@ -156,7 +184,18 @@ function growLetter(letter: Letter, grow: GrowContext) {
     Math.round((2 + random() * 4) * density),
     0,
   );
-  return { ornaments, tendril: [] };
+  addVessels(
+    random,
+    ornaments,
+    nextId,
+    width,
+    1 + (random() < 0.28 * density ? 1 : 0),
+    220,
+  );
+  return {
+    ornaments: ornaments.filter(() => random() >= ORNAMENT_DROP_CHANCE),
+    tendril: [],
+  };
 }
 
 // a word is finished: a fish, something on the seabed, more bubbles
@@ -171,6 +210,14 @@ function growWordEnd(letter: Letter, startsAfter: number, grow: GrowContext) {
   const nextId = () => letter.id * 100 + idCounter++;
   const width = grow.glyphWidth(letter.char);
   addFish(random, ornaments, nextId, width, 1, startsAfter + 40);
+  addVessels(
+    random,
+    ornaments,
+    nextId,
+    width,
+    1 + (random() < 0.4 ? 1 : 0),
+    startsAfter + 80,
+  );
   addSeabed(random, ornaments, nextId, width, 1, startsAfter + 120);
   addBubbles(
     random,
@@ -180,7 +227,7 @@ function growWordEnd(letter: Letter, startsAfter: number, grow: GrowContext) {
     2 + Math.floor(random() * 3),
     startsAfter,
   );
-  return ornaments;
+  return ornaments.filter(() => random() >= ORNAMENT_DROP_CHANCE);
 }
 
 // ---------- drawing ----------
@@ -358,7 +405,99 @@ const draw: Theme["draw"] = {
     const ring = ellipsePoints(center[0], center[1], radius, radius, 14);
     painter.stroke([...ring, ring[0]], drawing.colors.text, lineWidth);
   },
+  ship(painter, vessel, drawing) {
+    drawVessel(painter, vessel, drawing, "ship");
+  },
+  submarine(painter, vessel, drawing) {
+    drawVessel(painter, vessel, drawing, "submarine");
+  },
 };
+
+function drawVessel(
+  painter: Painter,
+  vessel: Ornament,
+  drawing: Parameters<Theme["draw"][string]>[2],
+  type: "ship" | "submarine",
+) {
+  const grown =
+    springIn((drawing.age - vessel.delay) / 1000, 7, 14) * drawing.vitality;
+  if (grown <= 0) return;
+  const [x, y] = drawing.toScreen(vessel.x!, vessel.y!);
+  const size = vessel.size * drawing.fontSize * grown;
+  const local = localFrame(x, y, size, vessel.angle + drawing.extraRotation);
+  const main =
+    drawing.colors[vessel.tint as "primary" | "secondary" | "accent"];
+  if (type === "ship") {
+    painter.fill(
+      [
+        local(-0.9, 0.08),
+        local(-0.7, 0.48),
+        local(0.62, 0.48),
+        local(0.92, 0.08),
+        local(0.55, 0.18),
+        local(-0.55, 0.18),
+      ],
+      main,
+    );
+    painter.stroke(
+      [local(-0.46, 0.28), local(0.48, 0.28)],
+      drawing.colors.accent,
+      Math.max(1, size * 0.07),
+    );
+    painter.stroke(
+      [local(-0.05, 0.1), local(-0.05, -0.78)],
+      drawing.colors.text,
+      Math.max(1, size * 0.055),
+    );
+    painter.fill(
+      [local(-0.1, -0.7), local(-0.1, 0), local(-0.68, 0)],
+      drawing.colors.accent,
+    );
+    painter.fill(
+      [local(0, -0.58), local(0, 0), local(0.55, 0)],
+      drawing.colors.text,
+    );
+  } else {
+    const hull: Point[] = [];
+    for (let i = 0; i < 24; i++) {
+      const a = (i / 24) * Math.PI * 2;
+      hull.push(local(Math.cos(a) * 0.9, Math.sin(a) * 0.38));
+    }
+    painter.fill(hull, main);
+    painter.fill(
+      [
+        local(-0.2, -0.25),
+        local(-0.2, -0.58),
+        local(0.18, -0.58),
+        local(0.18, -0.25),
+      ],
+      drawing.colors.accent,
+    );
+    painter.stroke(
+      [local(0.05, -0.54), local(0.05, -0.78), local(0.28, -0.78)],
+      drawing.colors.text,
+      Math.max(1, size * 0.055),
+    );
+    for (const px of [-0.48, -0.05, 0.38]) {
+      const point = local(px, -0.02);
+      painter.fill(
+        ellipsePoints(
+          point[0],
+          point[1],
+          Math.max(1.2, size * 0.085),
+          Math.max(1.2, size * 0.085),
+          10,
+        ),
+        drawing.colors.background,
+      );
+    }
+    painter.stroke(
+      [local(0.92, -0.18), local(1.08, 0), local(0.92, 0.18)],
+      drawing.colors.accent,
+      Math.max(1, size * 0.06),
+    );
+  }
+}
 
 function drawJellyfish(
   painter: Painter,
@@ -414,8 +553,6 @@ const water: Theme = {
     palette("Deep sea", "#031B34", "#FF8A3D", "#3DD6D0", "#FFD7A8", "#E3F4FF"),
     palette("Lagoon", "#0A4D68", "#FFD23F", "#FF6B6B", "#E0F7FA", "#F0FDFF"),
     palette("Abyss", "#000814", "#FFC300", "#00B4D8", "#CAF0F8", "#DDEBFF"),
-    palette("Coral", "#FF6F59", "#FFF4E0", "#1B3A4B", "#FFD166", "#33140F"),
-    palette("Sand", "#F4E9D8", "#E4572E", "#17BEBB", "#2E282A", "#2E282A"),
     palette("Mono", "#000000", "#F2F2F2", "#6E6E6E", "#FFFFFF", "#FFFFFF"),
   ],
   growLetter,
@@ -426,7 +563,9 @@ const water: Theme = {
       ? o.radius * 1.6
       : o.kind === "bubble"
         ? o.size
-        : o.radius,
+        : o.kind === "ship" || o.kind === "submarine"
+          ? o.size * 1.4
+          : o.radius,
   drawVisitor: drawJellyfish,
 };
 export default water;

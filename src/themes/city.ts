@@ -110,6 +110,19 @@ function growLetter(letter: Letter, grow: GrowContext) {
       layer: random() < 0.5 ? 0 : 1,
       delay: random() * 600,
     });
+  // Small street traffic adds foreground depth beneath the letter baseline.
+  if (random() < 0.7 * density)
+    ornaments.push({
+      kind: "car",
+      id: nextId(),
+      x: (random() - 0.5) * width * 1.8,
+      y: 0.19 + random() * 0.08,
+      size: 0.13 + random() * 0.05,
+      facing: random() < 0.5 ? -1 : 1,
+      tint: random() < 0.5 ? "primary" : "accent",
+      layer: 1,
+      delay: 260 + random() * 400,
+    });
   return { ornaments, tendril: [] };
 }
 
@@ -311,6 +324,57 @@ const draw: Theme["draw"] = {
       );
     }
   },
+  car(painter, car, drawing) {
+    const grown =
+      springIn((drawing.age - car.delay) / 1000, 7, 14) * drawing.vitality;
+    if (grown <= 0) return;
+    const seconds = drawing.age / 1000;
+    const center = drawing.toScreen(
+      car.x! + Math.sin(seconds * 0.8 + car.id) * 0.025,
+      car.y!,
+    );
+    const size = car.size * drawing.fontSize * grown;
+    const mirror = car.facing as number;
+    const local = (px: number, py: number): Point => [
+      center[0] + px * size * mirror,
+      center[1] + py * size,
+    ];
+    const body = drawing.colors[car.tint as "primary" | "accent"];
+    painter.fill(
+      [
+        local(-0.9, 0.05),
+        local(-0.68, -0.25),
+        local(-0.25, -0.48),
+        local(0.4, -0.45),
+        local(0.78, -0.1),
+        local(0.92, 0.05),
+        local(0.85, 0.38),
+        local(-0.78, 0.38),
+      ],
+      body,
+    );
+    painter.fill(
+      [
+        local(-0.48, -0.2),
+        local(-0.2, -0.4),
+        local(0.27, -0.38),
+        local(0.52, -0.12),
+      ],
+      drawing.colors.background,
+    );
+    for (const wheelX of [-0.52, 0.52]) {
+      const wheel = local(wheelX, 0.35);
+      painter.fill(
+        ellipsePoints(wheel[0], wheel[1], size * 0.17, size * 0.17, 10),
+        drawing.colors.text,
+      );
+    }
+    const headlight = local(0.82, 0.15);
+    painter.fill(
+      ellipsePoints(headlight[0], headlight[1], size * 0.06, size * 0.06, 8),
+      drawing.colors.accent,
+    );
+  },
 };
 
 function drawPigeon(
@@ -418,33 +482,6 @@ const city: Theme = {
       "#FF2E97",
       "#F2EDFF",
     ),
-    palette(
-      "Noon",
-      "#BFE3F5",
-      ["#8FADD0", "#A9C2DF", "#7D9BBF"],
-      ["#E8F4FF", "#FFFFFF"],
-      "#FFFFFF",
-      "#FF6B4A",
-      "#0B1B2B",
-    ),
-    palette(
-      "Blueprint",
-      "#0F3D91",
-      ["#1D4FA8", "#245BC0", "#164497"],
-      ["#BFD7FF"],
-      "#2A62C4",
-      "#BFD7FF",
-      "#E3EEFF",
-    ),
-    palette(
-      "Mono",
-      "#000000",
-      ["#1C1C1C", "#262626", "#303030"],
-      ["#F2F2F2", "#9A9A9A"],
-      "#1A1A1A",
-      "#FFFFFF",
-      "#FFFFFF",
-    ),
   ],
   growLetter,
   growWordEnd,
@@ -454,7 +491,9 @@ const city: Theme = {
       ? o.height + 0.2
       : o.kind === "lamp"
         ? o.height
-        : o.radius * 1.6,
+        : o.kind === "car"
+          ? o.size * 1.2
+          : o.radius * 1.6,
   drawVisitor: drawPigeon,
 };
 export default city;

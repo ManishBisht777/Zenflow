@@ -82,11 +82,11 @@ function growLetter(letter: Letter, grow: GrowContext) {
   const width = grow.glyphWidth(letter.char),
     density = grow.density;
   // tall peaks first so smaller ones sit in front of them
-  const peakCount = 1 + (random() < 0.5 * density ? 1 : 0);
+  const peakCount = 1 + (random() < 0.25 * density ? 1 : 0);
   const plans = Array.from({ length: peakCount }, () => ({
     x: (random() - 0.5) * width * 1.1,
-    width: 0.5 + random() * 0.7,
-    height: 0.45 + random() * 0.75 + (letter.indexInWord === 0 ? 0.2 : 0),
+    width: 0.42 + random() * 0.5,
+    height: 0.32 + random() * 0.58 + (letter.indexInWord === 0 ? 0.12 : 0),
   }));
   plans
     .sort((a, b) => b.height - a.height)
@@ -125,6 +125,29 @@ function growLetter(letter: Letter, grow: GrowContext) {
       layer: random() < 0.5 ? 0 : 1,
       delay: random() * 600,
     });
+  if (random() < 0.55 * density)
+    ornaments.push({
+      kind: "bird",
+      id: nextId(),
+      x: (random() - 0.5) * width * 1.7,
+      y: -1.05 - random() * 0.55,
+      size: 0.07 + random() * 0.04,
+      angle: (random() - 0.5) * 0.3,
+      layer: 1,
+      delay: 150 + random() * 700,
+    });
+  const flowerCount = random() < 0.8 * density ? 1 + (random() < 0.35 ? 1 : 0) : 0;
+  for (let i = 0; i < flowerCount; i++)
+    ornaments.push({
+      kind: "wildflower",
+      id: nextId(),
+      x: (random() - 0.5) * width * 1.25,
+      y: 0.12 + random() * 0.14,
+      size: 0.07 + random() * 0.04,
+      tint: random() < 0.5 ? "sun" : "snow",
+      layer: 1,
+      delay: 380 + i * 160 + random() * 250,
+    });
   if (letter.indexInWord === 0 && random() < 0.45)
     ornaments.push({
       kind: "sun",
@@ -155,7 +178,7 @@ function growWordEnd(letter: Letter, startsAfter: number, grow: GrowContext) {
       nextId,
       (random() - 0.3) * width * 0.8,
       0.9 + random() * 0.5,
-      1.3 + random() * 0.35,
+      0.95 + random() * 0.28,
       startsAfter + 40,
     ),
   );
@@ -301,6 +324,54 @@ const draw: Theme["draw"] = {
         drawing.fontSize * 0.07,
       );
     }
+  },
+  bird(painter, bird, drawing) {
+    const grown = springIn((drawing.age - bird.delay) / 1000, 7, 14) * drawing.vitality;
+    if (grown <= 0) return;
+    const center = drawing.toScreen(bird.x!, bird.y!),
+      size = bird.size * drawing.fontSize * grown,
+      angle = bird.angle + drawing.extraRotation,
+      cos = Math.cos(angle),
+      sin = Math.sin(angle),
+      point = (x: number, y: number): Point => [
+        center[0] + (x * cos - y * sin) * size,
+        center[1] + (x * sin + y * cos) * size,
+      ];
+    painter.stroke(
+      [point(-1, 0.2), point(-0.45, -0.25), point(0, 0.2), point(0.45, -0.25), point(1, 0.2)],
+      mountainColors(drawing.colors).trunk,
+      Math.max(1, size * 0.12),
+    );
+  },
+  wildflower(painter, flower, drawing) {
+    const grown = springIn((drawing.age - flower.delay) / 1000, 7, 14) * drawing.vitality;
+    if (grown <= 0) return;
+    const center = drawing.toScreen(flower.x!, flower.y!),
+      size = flower.size * drawing.fontSize * grown,
+      colors = mountainColors(drawing.colors),
+      top = drawing.toScreen(flower.x!, flower.y! - 0.18 * grown);
+    painter.stroke(
+      [drawing.toScreen(flower.x!, flower.y! + 0.12), top],
+      colors.pine,
+      Math.max(1, size * 0.1),
+    );
+    for (let i = 0; i < 5; i++) {
+      const angle = (i / 5) * Math.PI * 2;
+      painter.fill(
+        ellipsePoints(
+          top[0] + Math.cos(angle) * size * 0.34,
+          top[1] + Math.sin(angle) * size * 0.34,
+          size * 0.25,
+          size * 0.25,
+          10,
+        ),
+        colors[flower.tint as "sun" | "snow"],
+      );
+    }
+    painter.fill(
+      ellipsePoints(top[0], top[1], size * 0.15, size * 0.15, 10),
+      colors.sun,
+    );
   },
   cloud(painter, cloud, drawing) {
     const grown =
@@ -485,6 +556,8 @@ const mountain: Theme = {
       ? Math.max(o.height, o.width / 2)
       : o.kind === "pine"
         ? o.height
+        : o.kind === "wildflower" || o.kind === "bird"
+          ? o.size * 1.8
         : o.kind === "cloud"
           ? o.radius * 2
           : o.radius,
