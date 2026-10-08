@@ -58,9 +58,10 @@ export default function App() {
     linkedin: { label: "LinkedIn banner", width: 1584, height: 396 },
     twitter: { label: "Twitter / X banner", width: 1500, height: 500 },
   } as const;
-  const selectedImageSize = imageSize === "custom"
-    ? { width: Number(customWidth), height: Number(customHeight) }
-    : imageSizes[imageSize as keyof typeof imageSizes];
+  const selectedImageSize =
+    imageSize === "custom"
+      ? { width: Number(customWidth), height: Number(customHeight) }
+      : imageSizes[imageSize as keyof typeof imageSizes];
 
   const colors = theme.palettes[paletteIndex] || theme.palettes[0];
   const selectTheme = (id: string) => {
@@ -164,7 +165,7 @@ export default function App() {
             rel="noopener"
             className="underline underline-offset-2"
           >
-            More by Manish
+            More stuff
           </a>
         </div>
 
@@ -289,10 +290,7 @@ export default function App() {
 
                 <div className="flex flex-col gap-2.5 border-t border-border pt-5">
                   <SectionLabel>Still image · PNG</SectionLabel>
-                  <Select
-                    value={imageSize}
-                    onValueChange={setImageSize}
-                  >
+                  <Select value={imageSize} onValueChange={setImageSize}>
                     <SelectTrigger
                       aria-label="Image export size"
                       className="h-10 w-full rounded-[10px] border-border bg-background text-xs text-foreground"
@@ -300,8 +298,12 @@ export default function App() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="border-border bg-background text-foreground">
-                      <SelectItem value="linkedin">LinkedIn banner · 1584 × 396</SelectItem>
-                      <SelectItem value="twitter">Twitter / X banner · 1500 × 500</SelectItem>
+                      <SelectItem value="linkedin">
+                        LinkedIn banner · 1584 × 396
+                      </SelectItem>
+                      <SelectItem value="twitter">
+                        Twitter / X banner · 1500 × 500
+                      </SelectItem>
                       <SelectItem value="custom">Custom viewport</SelectItem>
                     </SelectContent>
                   </Select>
@@ -314,7 +316,9 @@ export default function App() {
                           min="1"
                           max="4096"
                           value={customWidth}
-                          onChange={(e) => setCustomWidth(e.currentTarget.value)}
+                          onChange={(e) =>
+                            setCustomWidth(e.currentTarget.value)
+                          }
                           className="rounded-[10px] border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-foreground"
                         />
                       </label>
@@ -325,7 +329,9 @@ export default function App() {
                           min="1"
                           max="4096"
                           value={customHeight}
-                          onChange={(e) => setCustomHeight(e.currentTarget.value)}
+                          onChange={(e) =>
+                            setCustomHeight(e.currentTarget.value)
+                          }
                           className="rounded-[10px] border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-foreground"
                         />
                       </label>
@@ -349,7 +355,8 @@ export default function App() {
                     }
                     className="cursor-pointer rounded-md border border-border px-3.5 py-3 font-medium text-foreground hover:border-foreground disabled:opacity-50"
                   >
-                    Export PNG · {selectedImageSize.width || "—"} × {selectedImageSize.height || "—"}
+                    Export PNG · {selectedImageSize.width || "—"} ×{" "}
+                    {selectedImageSize.height || "—"}
                   </motion.button>
                 </div>
 
